@@ -5,6 +5,8 @@
 
 #include "mmioDevice.hpp"
 
+namespace bz80 {
+
 template<uint8_t N>
 class MmioRam: MmioDevice {
 private:
@@ -47,3 +49,5 @@ public:
         this->data[addr] = value;
     }
 };
+
+}

@@ -7,6 +7,8 @@
 
 #include "mmioDevice.hpp"
 
+namespace bz80 {
+
 class MmioDeviceManager {
 private:
     std::map<uint16_t, std::unique_ptr<MmioDevice>> devices;
@@ -97,3 +99,5 @@ public:
         this->devices[addr] = std::move(device);
     }
 };
+
+}

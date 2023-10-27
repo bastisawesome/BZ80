@@ -5,6 +5,8 @@
 
 #include "mmioDevice.hpp"
 
+namespace bz80 {
+
 template<uint16_t N>
 class MmioRom: MmioDevice {
 private:
@@ -38,3 +40,5 @@ public:
         // Do nothing.
     }
 };
+
+}
