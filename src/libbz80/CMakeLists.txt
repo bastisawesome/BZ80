@@ -7,6 +7,8 @@ qt_add_library(libbz80 STATIC
     registerpairtype.hpp
     registerinterface.hpp
     registerinterface.cpp
+    z80basecpu.hpp
+    z80basecpu.cpp
 )
 
 target_include_directories(libbz80 INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})

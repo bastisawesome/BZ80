@@ -2,6 +2,7 @@
 #include <memory>
 #include <mmioDeviceManager.hpp>
 #include <mmioDevice.hpp>
+#include <z80basecpu.hpp>
 
 #include "systeminterface.hpp"
 

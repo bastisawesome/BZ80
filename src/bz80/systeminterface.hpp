@@ -4,7 +4,11 @@
 #include <cstdint>
 #include <mmioDeviceManager.hpp>
 #include <mmioDevice.hpp>
-#include <z80BaseCpu.hpp>
+#include <z80basecpu.hpp>
+
+using bz80::MmioDeviceManager;
+using bz80::MmioDevice;
+using bz80::Z80BaseCpu;
 
 class SystemInterface {
 private:
