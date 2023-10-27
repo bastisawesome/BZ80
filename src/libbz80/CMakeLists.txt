@@ -3,6 +3,8 @@ qt_add_library(libbz80 STATIC
     mmioRam.hpp
     mmioROM.hpp
     mmioDeviceManager.hpp
+    registerpairtype.cpp
+    registerpairtype.hpp
 )
 
 target_include_directories(libbz80 INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
