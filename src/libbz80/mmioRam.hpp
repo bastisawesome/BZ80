@@ -12,6 +12,8 @@ class MmioRam: MmioDevice {
 private:
     std::array<uint8_t, N> data;
 
+    friend class MmioRamTest;
+
 public:
     MmioRam():
         data(std::array<uint8_t, N>()){}
@@ -48,8 +50,6 @@ public:
 
         this->data[addr] = value;
     }
-
-    friend class MmioRamTest;
 };
 
 }

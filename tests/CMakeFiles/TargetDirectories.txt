@@ -1,0 +1,5 @@
+/home/bast/programming/bz80/tests/CMakeFiles/Bz80Tests.dir
+/home/bast/programming/bz80/tests/CMakeFiles/test.dir
+/home/bast/programming/bz80/tests/CMakeFiles/edit_cache.dir
+/home/bast/programming/bz80/tests/CMakeFiles/rebuild_cache.dir
+/home/bast/programming/bz80/tests/CMakeFiles/Bz80Tests_autogen.dir
