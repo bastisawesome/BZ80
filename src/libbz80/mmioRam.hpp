@@ -22,7 +22,7 @@ public:
      * `addr` is assumed to be adjusted before being passed.
      * Returns the value at `addr` or 0 if out of bounds.
      */
-    uint8_t read8(const uint16_t addr) const {
+    uint8_t read8(const uint16_t addr) const override {
         if(addr > this->data.size()) {
             return 0;
         }
@@ -39,7 +39,7 @@ public:
      * adjusted before being passed. If `addr` is out of bounds, write is
      * ignored.
      */
-    void write8(const uint16_t addr, const uint8_t value) const {
+    void write8(const uint16_t addr, const uint8_t value) override {
         if(addr > this->data.size()) {
             return;
         }
