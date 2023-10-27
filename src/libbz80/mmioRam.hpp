@@ -29,7 +29,7 @@ public:
             return 0;
         }
 
-        this->data[addr];
+        return this->data[addr];
     }
 
     /**
@@ -48,6 +48,8 @@ public:
 
         this->data[addr] = value;
     }
+
+    friend class MmioRamTest;
 };
 
 }
