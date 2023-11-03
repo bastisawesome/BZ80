@@ -10,7 +10,7 @@ class MmioRamTest;
 namespace bz80 {
 
 template<uint8_t N>
-class MmioRam: MmioDevice {
+class MmioRam: public MmioDevice {
 private:
     std::array<uint8_t, N> data;
 
