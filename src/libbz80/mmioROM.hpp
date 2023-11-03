@@ -5,12 +5,16 @@
 
 #include "mmioDevice.hpp"
 
+class MmioRomTest;
+
 namespace bz80 {
 
 template<uint16_t N>
-class MmioRom: MmioDevice {
+class MmioRom: public MmioDevice {
 private:
     std::array<uint8_t, N> data;
+
+    friend class ::MmioRomTest;
 
 public:
     MmioRom():
