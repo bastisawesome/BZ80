@@ -6,7 +6,6 @@
 
 using bz80::MmioRam;
 
-namespace bz80 {
 class MmioRamTest : public QObject {
     Q_OBJECT
 
@@ -76,7 +75,6 @@ void MmioRamTest::test_write8_overwrite() {
     QCOMPARE(this->ramModule->data[0], 69);
 }
 
-}
-QTEST_APPLESS_MAIN(bz80::MmioRamTest)
+QTEST_APPLESS_MAIN(MmioRamTest)
 
 #include "tst_mmioramtest.moc"

@@ -5,6 +5,8 @@
 
 #include "mmioDevice.hpp"
 
+class MmioRamTest;
+
 namespace bz80 {
 
 template<uint8_t N>
@@ -12,7 +14,7 @@ class MmioRam: MmioDevice {
 private:
     std::array<uint8_t, N> data;
 
-    friend class MmioRamTest;
+    friend class ::MmioRamTest;
 
 public:
     MmioRam():
