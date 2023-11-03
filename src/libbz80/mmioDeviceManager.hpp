@@ -7,6 +7,8 @@
 
 #include "mmioDevice.hpp"
 
+class MmioDeviceManagerTest;
+
 namespace bz80 {
 
 class MmioDeviceManager {
@@ -16,12 +18,22 @@ private:
     std::map<uint16_t, std::unique_ptr<MmioDevice>>::const_iterator getNearestDevice(uint16_t addr) const {
         auto found = this->devices.lower_bound(addr);
 
+        if(found == this->devices.end()) {
+            if(this->devices.empty()) {
+                return found;
+            }
+
+            return --found;
+        }
+
         if(found->first == addr) {
             return found;
         }
 
         return --found;
     }
+
+    friend class ::MmioDeviceManagerTest;
 
 public:
     MmioDeviceManager():
@@ -36,6 +48,10 @@ public:
      * in that device at `addr`.
      */
     uint8_t read8(uint16_t const addr) const {
+        if(this->devices.empty()) {
+            return 0;
+        }
+
         auto const devIter = this->getNearestDevice(addr);
         uint16_t adjustedAddr = addr & ~devIter->first;
         return devIter->second->read8(adjustedAddr);
@@ -50,10 +66,14 @@ public:
      * in that device at `addr`.
      */
     uint16_t read16(uint16_t const addr) const {
+        if(this->devices.empty()) {
+            return 0;
+        }
+
         uint16_t value;
 
         value = this->read8(addr);
-        value &= this->read8(addr+1) << 8;
+        value |= this->read8(addr+1) << 8;
 
         return value;
     }
@@ -67,6 +87,10 @@ public:
      * device based on the local, adjusted address.
      */
     void write8(uint16_t const addr, uint8_t const value) const {
+        if(this->devices.empty()) {
+            return;
+        }
+
         auto const devIter = this->getNearestDevice(addr);
         uint16_t adjustedAddr = addr & ~devIter->first;
         devIter->second->write8(adjustedAddr, value);
@@ -81,8 +105,12 @@ public:
      * writes the lower 8-bits of `value` to device mapped to `addr`+1.
      */
     void write16(uint16_t const addr, uint16_t const value) const {
-        write8(addr, value >> 8);
+        if(this->devices.empty()) {
+            return;
+        }
+
         write8(addr, static_cast<uint8_t>(value));
+        write8(addr+1, value >> 8);
     }
 
     /**
