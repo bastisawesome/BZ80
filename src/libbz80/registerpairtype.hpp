@@ -1,6 +1,12 @@
 #pragma once
 
+/*
+ * TODO: Make operator overloads use functions.
+ */
+
 #include <cstdint>
+
+class RegisterPairTypeTest;
 
 namespace bz80 {
 
@@ -8,6 +14,8 @@ class RegisterPairType {
 private:
     uint8_t upper8Register, lower8Register;
     uint16_t combinedValue;
+
+    friend class ::RegisterPairTypeTest;
 
 public:
     RegisterPairType(uint16_t initialValue = 0);
