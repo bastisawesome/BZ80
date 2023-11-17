@@ -2,7 +2,6 @@
 
 #include <cstdint>
 
-#include "registerinterface.hpp"
 #include "mmioDeviceManager.hpp"
 
 namespace bz80 {
@@ -21,7 +20,6 @@ protected:
     uint8_t interruptVector, memoryRefresh;
     bool isHalted;
 
-    RegisterInterface registers, registersAlt;
     CpuState state;
 
 public:

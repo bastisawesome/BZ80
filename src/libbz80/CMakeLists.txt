@@ -5,8 +5,6 @@ qt_add_library(libbz80 STATIC
     mmioDeviceManager.hpp
     registerpairtype.cpp
     registerpairtype.hpp
-    registerinterface.hpp
-    registerinterface.cpp
     z80basecpu.hpp
     z80basecpu.cpp
 )
