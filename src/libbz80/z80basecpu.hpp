@@ -85,6 +85,7 @@ public:
 // Instructions
 protected:
     uint8_t ld_r_imm(const MmioDeviceManager& bus);
+    uint8_t inc_r(const MmioDeviceManager& bus);
 };
 
 } // namespace bz80
