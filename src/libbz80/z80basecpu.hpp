@@ -7,11 +7,13 @@
 #include "mmioDeviceManager.hpp"
 #include "registerpairtype.hpp"
 
+#define FETCH_CYCLES (uint8_t)4
+#define DECODE_CYCLES (uint8_t)0
+#define MEMORY_ACCESS_CYCLES (uint8_t)3
+
 class Bz80BaseCpuInstructionsTest;
 
 namespace bz80 {
-
-typedef std::function<void(uint8_t)> regPairT8Getter;
 
 struct FlagRegister {
     bool carry: 1;
@@ -22,10 +24,21 @@ struct FlagRegister {
     bool unused2: 1;
     bool zero: 1;
     bool sign: 1;
+
+    bool operator==(const FlagRegister&) const = default;
 };
 
-
 class Z80BaseCpu {
+protected:
+    void fetch();
+    void decode();
+    uint8_t execute();
+
+    void setRegisterA(uint8_t value);
+    void setMemoryAddressAtHL(uint8_t value);
+    uint8_t getRegisterA();
+    uint8_t getMemoryAddressAtHl();
+
 protected:
     enum class CpuState {
         FETCH,
@@ -57,40 +70,21 @@ protected:
     uint8_t interruptVector, memoryRefresh;
 
     bool isHalted;
+    const MmioDeviceManager& bus;
     uint8_t currentOpcode;
     struct DecodedInstruction currentDecodedInstruction;
 
     CpuState state;
 
-    std::array<regPairT8Getter, 8> tableRSetters {
-        std::bind(&RegisterPairType::setUpper8, this->registerBC,
-                  std::placeholders::_1),
-        std::bind(&RegisterPairType::setLower8, this->registerBC,
-                  std::placeholders::_1),
-        std::bind(&RegisterPairType::setUpper8, this->registerDE,
-                  std::placeholders::_1),
-        std::bind(&RegisterPairType::setLower8, this->registerDE,
-                  std::placeholders::_1),
-        std::bind(&RegisterPairType::setUpper8, this->registerHL,
-                  std::placeholders::_1),
-        std::bind(&RegisterPairType::setLower8, this->registerHL,
-                  std::placeholders::_1),
-    };
-
     friend class ::Bz80BaseCpuInstructionsTest;
 
 public:
-    Z80BaseCpu();
-    uint8_t tick(const MmioDeviceManager& bus);
-
-protected:
-    void fetch(const MmioDeviceManager& bus);
-    void decode();
-    uint8_t execute(const MmioDeviceManager& bus);
+    Z80BaseCpu(const MmioDeviceManager& bus);
+    uint8_t tick();
 
 // Instructions
 protected:
-    uint8_t ld_r_imm(const MmioDeviceManager& bus, regPairT8Getter reg);
+    uint8_t ld_r_imm(const MmioDeviceManager& bus);
 };
 
 } // namespace bz80
