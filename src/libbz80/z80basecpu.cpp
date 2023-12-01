@@ -4,12 +4,27 @@
 
 namespace bz80 {
 
-Z80BaseCpu::Z80BaseCpu(const MmioDeviceManager& bus):
-    registerA(0), registerBC(0), registerDE(0), registerHL(0), registerF({0}),
-    registerA_alt(0), registerBC_alt(0), registerDE_alt(0), registerHL_alt(0),
-    registerF_alt({0}), programCounter(0), stackPointer(0), indexX(0),
-    indexY(0), interruptVector(0), memoryRefresh(0), isHalted(false),
-    state(CpuState::FETCH), currentOpcode(0), bus(bus) {}
+Z80BaseCpu::Z80BaseCpu(const MmioDeviceManager& bus)
+    : registerA(0)
+    , registerBC(0)
+    , registerDE(0)
+    , registerHL(0)
+    , registerF({ 0 })
+    , registerA_alt(0)
+    , registerBC_alt(0)
+    , registerDE_alt(0)
+    , registerHL_alt(0)
+    , registerF_alt({ 0 })
+    , programCounter(0)
+    , stackPointer(0)
+    , indexX(0)
+    , indexY(0)
+    , interruptVector(0)
+    , memoryRefresh(0)
+    , isHalted(false)
+    , state(CpuState::FETCH)
+    , currentOpcode(0)
+    , bus(bus) { }
 
 uint8_t Z80BaseCpu::tick() {
     uint8_t cycles;

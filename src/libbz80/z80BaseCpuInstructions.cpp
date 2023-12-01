@@ -36,7 +36,8 @@ uint8_t Z80BaseCpu::ld_r_imm(const MmioDeviceManager& bus) {
     case 7:
         this->registerA = value;
         return cycles;
-    default: return UINT8_MAX;
+    default:
+        return UINT8_MAX;
     }
 }
 
@@ -92,5 +93,4 @@ uint8_t Z80BaseCpu::inc_r(const MmioDeviceManager& bus) {
 
     return cycles;
 }
-
 };

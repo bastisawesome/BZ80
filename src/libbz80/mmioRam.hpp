@@ -1,7 +1,7 @@
 #pragma once
 
-#include <cstdint>
 #include <array>
+#include <cstdint>
 
 #include "mmioDevice.hpp"
 
@@ -9,16 +9,16 @@ class MmioRamTest;
 
 namespace bz80 {
 
-template<uint8_t N>
-class MmioRam: public MmioDevice {
+template <uint8_t N>
+class MmioRam : public MmioDevice {
 private:
     std::array<uint8_t, N> data;
 
     friend class ::MmioRamTest;
 
 public:
-    MmioRam():
-        data(std::array<uint8_t, N>()){}
+    MmioRam()
+        : data(std::array<uint8_t, N>()) { }
 
     /**
      * @brief read8 Returns value stored in memory at `addr`.

@@ -1,7 +1,7 @@
 #pragma once
 
-#include <cstdint>
 #include <array>
+#include <cstdint>
 #include <functional>
 
 #include "mmioDeviceManager.hpp"
@@ -16,14 +16,14 @@ class Bz80BaseCpuInstructionsTest;
 namespace bz80 {
 
 struct FlagRegister {
-    bool carry: 1;
-    bool add_sub: 1;
-    bool overflow: 1;
-    bool unused1: 1;
-    bool halfcarry: 1;
-    bool unused2: 1;
-    bool zero: 1;
-    bool sign: 1;
+    bool carry : 1;
+    bool add_sub : 1;
+    bool overflow : 1;
+    bool unused1 : 1;
+    bool halfcarry : 1;
+    bool unused2 : 1;
+    bool zero : 1;
+    bool sign : 1;
 
     bool operator==(const FlagRegister&) const = default;
 };
@@ -82,11 +82,10 @@ public:
     Z80BaseCpu(const MmioDeviceManager& bus);
     uint8_t tick();
 
-// Instructions
+    // Instructions
 protected:
     uint8_t ld_r_imm(const MmioDeviceManager& bus);
     uint8_t inc_r(const MmioDeviceManager& bus);
 };
 
 } // namespace bz80
-

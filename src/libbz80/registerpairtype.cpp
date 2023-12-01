@@ -4,8 +4,8 @@
 
 namespace bz80 {
 
-RegisterPairType::RegisterPairType(uint16_t initialValue):
-    combinedValue(initialValue) {
+RegisterPairType::RegisterPairType(uint16_t initialValue)
+    : combinedValue(initialValue) {
     this->calculate8();
 }
 

@@ -1,8 +1,8 @@
 #pragma once
 
+#include <cstdint>
 #include <map>
 #include <memory>
-#include <cstdint>
 #include <utility>
 
 #include "mmioDevice.hpp"
@@ -15,7 +15,8 @@ class MmioDeviceManager {
 private:
     std::map<uint16_t, std::unique_ptr<MmioDevice>> devices;
 
-    std::map<uint16_t, std::unique_ptr<MmioDevice>>::const_iterator getNearestDevice(uint16_t addr) const {
+    std::map<uint16_t, std::unique_ptr<MmioDevice>>::const_iterator
+    getNearestDevice(uint16_t addr) const {
         auto found = this->devices.lower_bound(addr);
 
         if(found == this->devices.end()) {
@@ -36,11 +37,12 @@ private:
     friend class ::MmioDeviceManagerTest;
 
 public:
-    MmioDeviceManager():
-    devices(std::map<uint16_t, std::unique_ptr<MmioDevice>>()){}
+    MmioDeviceManager()
+        : devices(std::map<uint16_t, std::unique_ptr<MmioDevice>>()) { }
 
     /**
-     * @brief read8 Returns the value at `addr` from the device mapped to `addr`.
+     * @brief read8 Returns the value at `addr` from the device mapped to
+     * `addr`.
      * @param addr Memory address of the device.
      * @return Value stored at that memory address.
      *
@@ -73,7 +75,7 @@ public:
         uint16_t value;
 
         value = this->read8(addr);
-        value |= this->read8(addr+1) << 8;
+        value |= this->read8(addr + 1) << 8;
 
         return value;
     }
@@ -97,7 +99,8 @@ public:
     }
 
     /**
-     * @brief write16 Writes `value` to the device(s) located at `addr`/`addr`+1.
+     * @brief write16 Writes `value` to the device(s) located at
+     * `addr`/`addr`+1.
      * @param addr Address of the device(s) to write to.
      * @param value Value to be written to the device(s).
      *
@@ -110,7 +113,7 @@ public:
         }
 
         write8(addr, static_cast<uint8_t>(value));
-        write8(addr+1, value >> 8);
+        write8(addr + 1, value >> 8);
     }
 
     /**
