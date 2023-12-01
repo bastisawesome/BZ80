@@ -1,0 +1,36 @@
+---
+BasedOnStyle: WebKit
+BinPackParameters: true
+BinPackArguments: true
+AllowAllParametersOfDeclarationOnNextLine: true
+NamespaceIndentation: None
+BreakBeforeBraces: Custom
+ColumnLimit: 80
+PenaltyReturnTypeOnItsOwnLine: 200
+PenaltyIndentedWhitespace: 1
+PointerAlignment: Left
+AllowShortFunctionsOnASingleLine: Empty
+AlwaysBreakTemplateDeclarations: Yes
+AlignConsecutiveMacros: None
+AlignEscapedNewlines: DontAlign
+BraceWrapping:
+  AfterCaseLabel:  false
+  AfterClass:      false
+  AfterControlStatement: Never
+  AfterEnum:       false
+  AfterExternBlock: false
+  AfterFunction:   false
+  AfterNamespace:  false
+  AfterObjCDeclaration: false
+  AfterStruct:     false
+  AfterUnion:      false
+  BeforeCatch:     false
+  BeforeElse:      false
+  BeforeLambdaBody: false
+  BeforeWhile:     false
+  IndentBraces:    false
+  SplitEmptyFunction: false
+  SplitEmptyRecord: false
+  SplitEmptyNamespace: false
+SpaceBeforeParens: Never
+---
