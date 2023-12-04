@@ -85,6 +85,10 @@ uint8_t Z80BaseCpu::execute() {
             cycles += this->inc_r(bus);
             return cycles;
         }
+        case 5: {
+            cycles += this->dec_r(bus);
+            return cycles;
+        }
         case 6: {
             cycles += this->ld_r_imm(bus);
             return cycles;

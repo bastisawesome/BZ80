@@ -1,8 +1,10 @@
 #pragma once
 
+#include <QDebug>
 #include <array>
 #include <cstdint>
 #include <functional>
+#include <strstream>
 
 #include "mmioDeviceManager.hpp"
 #include "registerpairtype.hpp"
@@ -26,6 +28,19 @@ struct FlagRegister {
     bool sign : 1;
 
     bool operator==(const FlagRegister&) const = default;
+
+    operator QString() const {
+        QString repr;
+        repr += "FlagRegister {\n\tCarry: " + QString::number(this->carry)
+            + "\n\tAdd/Sub: " + QString::number(this->add_sub)
+            + "\n\tOverflow: " + QString::number(this->overflow)
+            + "\n\tUnused: " + QString::number(this->unused1)
+            + "\n\tHalf-carry: " + QString::number(this->halfcarry)
+            + "\n\tUnused: " + QString::number(this->unused2)
+            + "\n\tZero: " + QString::number(this->zero)
+            + "\n\tNegative: " + QString::number(this->sign) + "}";
+        return repr;
+    }
 };
 
 class Z80BaseCpu {
@@ -86,6 +101,7 @@ public:
 protected:
     uint8_t ld_r_imm(const MmioDeviceManager& bus);
     uint8_t inc_r(const MmioDeviceManager& bus);
+    uint8_t dec_r(const MmioDeviceManager& bus);
 };
 
 } // namespace bz80

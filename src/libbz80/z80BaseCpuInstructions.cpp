@@ -4,8 +4,12 @@
 
 namespace bz80 {
 
-bool calcFlagH(uint8_t origValue, uint8_t toAdd) {
-    return (((origValue & 0xf) + (toAdd & 0xf)) > 0xf);
+bool calcFlagH(uint8_t origValue, uint8_t toAdd, bool isSub = false) {
+    if(!isSub) {
+        return ((origValue & 0xf) + (toAdd & 0xf)) > 0xf;
+    }
+
+    return (toAdd & 0xf) <= (origValue & 0xf);
 }
 
 uint8_t Z80BaseCpu::ld_r_imm(const MmioDeviceManager& bus) {
@@ -85,11 +89,62 @@ uint8_t Z80BaseCpu::inc_r(const MmioDeviceManager& bus) {
 
     uint8_t postIncValue = preIncValue + 1;
 
-    this->registerF.sign = 0b10000000 & (postIncValue);
-    this->registerF.zero = (postIncValue) == 0;
+    this->registerF.sign = 0b10000000 & postIncValue;
+    this->registerF.zero = postIncValue == 0;
     this->registerF.overflow = preIncValue == 0x7f;
     this->registerF.add_sub = 0;
     this->registerF.halfcarry = calcFlagH(preIncValue, 1);
+
+    return cycles;
+}
+
+uint8_t Z80BaseCpu::dec_r(const MmioDeviceManager& bus) {
+    uint8_t cycles = 0, preDecValue;
+
+    switch(this->currentDecodedInstruction.y) {
+    case 0:
+        preDecValue = this->registerBC.getUpper8();
+        this->registerBC.addUpper8(-1);
+        break;
+    case 1:
+        preDecValue = this->registerBC.getLower8();
+        this->registerBC.addLower8(-1);
+        break;
+    case 2:
+        preDecValue = this->registerDE.getUpper8();
+        this->registerDE.addUpper8(-1);
+        break;
+    case 3:
+        preDecValue = this->registerDE.getLower8();
+        this->registerDE.addLower8(-1);
+        break;
+    case 4:
+        preDecValue = this->registerHL.getUpper8();
+        this->registerHL.addUpper8(-1);
+        break;
+    case 5:
+        preDecValue = this->registerHL.getLower8();
+        this->registerHL.addLower8(-1);
+        break;
+    case 6:
+        cycles += MEMORY_ACCESS_CYCLES;
+        preDecValue = this->bus.read8(this->registerHL.get16());
+        this->bus.write8(this->registerHL.get16(), preDecValue - 1);
+        break;
+    case 7:
+        preDecValue = this->registerA--;
+        break;
+    default:
+        return 255;
+    }
+
+    uint8_t postDecValue = preDecValue - 1;
+
+    this->registerF.sign = 0b10000000 & postDecValue;
+    this->registerF.zero = postDecValue == 0;
+    this->registerF.halfcarry = calcFlagH(preDecValue, -1, true);
+    this->registerF.overflow = preDecValue == 0x80;
+    this->registerF.add_sub = true;
 
     return cycles;
 }
