@@ -49,6 +49,13 @@ private slots:
 
     // NOP
     void test_nop();
+
+    // DJNZ d
+    void test_djnz_not_zero();
+    void test_djnz_zero();
+
+    // JR d
+    void test_jr();
 };
 
 Bz80BaseCpuInstructionsTest::Bz80BaseCpuInstructionsTest() {
@@ -427,6 +434,66 @@ void Bz80BaseCpuInstructionsTest::test_nop() {
     for(size_t i = 2; i < 16; i += 2) {
         QCOMPARE(this->bus.read16(i), 0);
     }
+}
+
+void Bz80BaseCpuInstructionsTest::test_djnz_not_zero() {
+    auto expFlags = FlagRegister { false, false, false, false, false, false,
+        false, true };
+    uint8_t expOffset = 5;
+    uint8_t expCycles = 9;
+
+    this->cpu->bus.write8(1, expOffset);
+
+    this->cpu->registerBC.setUpper8(15);
+    this->cpu->registerF = expFlags;
+    this->cpu->programCounter = 1;
+    this->cpu->currentOpcode = 0x10;
+    this->cpu->state = Z80BaseCpu::CpuState::DECODE;
+    this->cpu->tick();
+    uint8_t cycles = this->cpu->tick();
+
+    QCOMPARE(this->cpu->programCounter, expOffset + 2);
+    QCOMPARE(this->cpu->registerBC.getUpper8(), 14);
+    QCOMPARE(this->cpu->registerF, expFlags);
+    QCOMPARE(cycles, expCycles);
+}
+
+void Bz80BaseCpuInstructionsTest::test_djnz_zero() {
+    auto expFlags
+        = FlagRegister { true, false, true, false, false, false, false, true };
+    uint8_t expCycles = 4;
+
+    this->cpu->registerBC.setUpper8(1);
+    this->cpu->registerF = expFlags;
+    this->cpu->programCounter = 1;
+    this->cpu->currentOpcode = 0x10;
+    this->cpu->state = Z80BaseCpu::CpuState::DECODE;
+    this->cpu->tick();
+    uint8_t cycles = this->cpu->tick();
+
+    QCOMPARE(this->cpu->programCounter, 3);
+    QCOMPARE(this->cpu->registerBC.getUpper8(), 0);
+    QCOMPARE(this->cpu->registerF, expFlags);
+    QCOMPARE(cycles, expCycles);
+}
+
+void Bz80BaseCpuInstructionsTest::test_jr() {
+    auto expFlags
+        = FlagRegister { true, false, true, false, false, false, false, true };
+    uint8_t expCycles = 8;
+
+    this->bus.write8(11, 3);
+
+    this->cpu->programCounter = 11;
+    this->cpu->registerF = expFlags;
+    this->cpu->currentOpcode = 0x18;
+    this->cpu->state = Z80BaseCpu::CpuState::DECODE;
+    this->cpu->tick();
+    uint8_t cycles = this->cpu->tick();
+
+    QCOMPARE(this->cpu->programCounter, 15);
+    QCOMPARE(this->cpu->registerF, expFlags);
+    QCOMPARE(cycles, expCycles);
 }
 
 QTEST_APPLESS_MAIN(Bz80BaseCpuInstructionsTest)

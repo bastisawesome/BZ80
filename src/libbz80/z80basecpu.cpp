@@ -85,6 +85,12 @@ uint8_t Z80BaseCpu::execute() {
             switch(decodedInst.y) {
             case 0:
                 return this->nop();
+            case 2:
+                return this->djnz(bus);
+            case 3:
+                return this->jr_imm(bus);
+            default:
+                assert(false && "Cannot handle this instruction yet.");
             }
         }
         case 4: {

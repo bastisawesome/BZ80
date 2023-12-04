@@ -152,4 +152,37 @@ uint8_t Z80BaseCpu::dec_r(const MmioDeviceManager& bus) {
 uint8_t Z80BaseCpu::nop() {
     return 0;
 }
+
+uint8_t Z80BaseCpu::djnz(const MmioDeviceManager& bus) {
+    uint8_t cycles = 0;
+
+    this->registerBC.addUpper8(-1);
+    cycles += INC_DEC_REG_CYCLES;
+
+    uint8_t jumpAmt = bus.read8(this->programCounter++);
+
+    if(this->registerBC.getUpper8() != 0) {
+        this->programCounter += jumpAmt;
+        cycles += MEMORY_ACCESS_CYCLES;
+        cycles += INC_DEC_REG_CYCLES;
+        cycles += INC_DEC_REG_CYCLES;
+    } else {
+        this->programCounter++;
+    }
+
+    cycles += TEST_REG_CYCLES;
+
+    return cycles;
+}
+
+uint8_t Z80BaseCpu::jr_imm(const MmioDeviceManager& bus) {
+    uint8_t cycles = 0;
+
+    uint8_t jumpAmt = this->bus.read8(this->programCounter++);
+    cycles += MEMORY_ACCESS_CYCLES;
+    this->programCounter += jumpAmt;
+    cycles += 5; // TODO: Figure out why this is 5?
+
+    return cycles;
+}
 };

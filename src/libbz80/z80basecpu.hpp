@@ -12,6 +12,8 @@
 #define FETCH_CYCLES (uint8_t)4
 #define DECODE_CYCLES (uint8_t)0
 #define MEMORY_ACCESS_CYCLES (uint8_t)3
+#define INC_DEC_REG_CYCLES (uint8_t)1
+#define TEST_REG_CYCLES (uint8_t)3
 
 class Bz80BaseCpuInstructionsTest;
 
@@ -103,6 +105,8 @@ protected:
     uint8_t inc_r(const MmioDeviceManager& bus);
     uint8_t dec_r(const MmioDeviceManager& bus);
     uint8_t nop();
+    uint8_t djnz(const MmioDeviceManager& bus);
+    uint8_t jr_imm(const MmioDeviceManager& bus);
 };
 
 } // namespace bz80
