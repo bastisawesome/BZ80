@@ -55,3 +55,6 @@ compile_commands.json
 
 # Manual build
 build/
+
+# Clangd
+.cache/
