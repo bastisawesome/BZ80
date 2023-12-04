@@ -1,3 +1,4 @@
+#include "qtestcase.h"
 #include <QTest>
 
 #include <mmioDeviceManager.hpp>
@@ -25,6 +26,7 @@ public:
 private:
     Z80BaseCpu* cpu;
     MmioDeviceManager bus;
+
 private slots:
     void init();
     void cleanup();
@@ -50,12 +52,16 @@ private slots:
     // NOP
     void test_nop();
 
-    // DJNZ d
+    // DJNZ IMM
     void test_djnz_not_zero();
     void test_djnz_zero();
 
-    // JR d
+    // JR IMM
     void test_jr();
+
+    // JR cc, IMM
+    void test_jr_cc_imm_data();
+    void test_jr_cc_imm();
 };
 
 Bz80BaseCpuInstructionsTest::Bz80BaseCpuInstructionsTest() {
@@ -493,6 +499,89 @@ void Bz80BaseCpuInstructionsTest::test_jr() {
 
     QCOMPARE(this->cpu->programCounter, 15);
     QCOMPARE(this->cpu->registerF, expFlags);
+    QCOMPARE(cycles, expCycles);
+}
+
+void Bz80BaseCpuInstructionsTest::test_jr_cc_imm_data() {
+    QTest::addColumn<uint8_t>("opcode");
+    QTest::addColumn<bool>("shouldJump");
+    QTest::addColumn<FlagRegister>("startingFlags");
+    QTest::addColumn<uint8_t>("offset");
+    QTest::addColumn<uint8_t>("expCycles");
+    QTest::addColumn<uint16_t>("startingPC");
+
+    QTest::addRow("JR NZ, d (true)")
+        << (uint8_t)0x20 << true
+        << FlagRegister { false, false, false, false, false, false, false,
+               true }
+        << (uint8_t)8 << (uint8_t)8 << (uint16_t)14;
+
+    QTest::addRow("JR NZ, d (false)")
+        << (uint8_t)0x20 << false
+        << FlagRegister { true, true, true, false, true, false, true, false }
+        << (uint8_t)46 << (uint8_t)3 << (uint16_t)9;
+
+    QTest::addRow("JR Z, d (true)")
+        << (uint8_t)0x28 << true
+        << FlagRegister { true, false, false, false, true, false, true, true }
+        << (uint8_t)-7 << (uint8_t)8 << (uint16_t)7;
+
+    QTest::addRow("JR Z, d (false)")
+        << (uint8_t)0x28 << false
+        << FlagRegister { false, true, false, false, false, false, false,
+               false }
+        << (uint8_t)19 << (uint8_t)3 << (uint16_t)13;
+
+    QTest::addRow("JR NC, d (true)")
+        << (uint8_t)0x30 << true
+        << FlagRegister { false, true, false, false, false, false, false,
+               false }
+        << (uint8_t)51 << (uint8_t)8 << (uint16_t)7;
+
+    QTest::addRow("JR NC, d (false)")
+        << (uint8_t)0x30 << false
+        << FlagRegister { true, false, true, false, true, false, false, true }
+        << (uint8_t)24 << (uint8_t)3 << (uint16_t)14;
+
+    QTest::addRow("JR C, d (true)")
+        << (uint8_t)0x38 << true
+        << FlagRegister { true, false, false, false, false, false, false,
+               false }
+        << (uint8_t)61 << (uint8_t)8 << (uint16_t)2;
+
+    QTest::addRow("JR C, d (false)")
+        << (uint8_t)0x38 << false
+        << FlagRegister { false, false, false, false, false, false, false,
+               false }
+        << (uint8_t)121 << (uint8_t)3 << (uint16_t)14;
+}
+
+void Bz80BaseCpuInstructionsTest::test_jr_cc_imm() {
+    QFETCH(uint8_t, opcode);
+    QFETCH(bool, shouldJump);
+    QFETCH(FlagRegister, startingFlags);
+    QFETCH(uint8_t, offset);
+    QFETCH(uint8_t, expCycles);
+    QFETCH(uint16_t, startingPC);
+
+    this->bus.write8(startingPC, offset);
+
+    this->cpu->currentOpcode = opcode;
+    this->cpu->registerF = startingFlags;
+    this->cpu->programCounter = startingPC;
+    this->cpu->state = Z80BaseCpu::CpuState::DECODE;
+    this->cpu->tick();
+    uint8_t cycles = this->cpu->tick();
+    uint8_t expectedPC;
+
+    if(shouldJump) {
+        expectedPC = startingPC + offset + 1;
+    } else {
+        expectedPC = startingPC + 1;
+    }
+
+    QCOMPARE(this->cpu->programCounter, expectedPC);
+    QCOMPARE(this->cpu->registerF, startingFlags);
     QCOMPARE(cycles, expCycles);
 }
 

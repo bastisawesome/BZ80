@@ -107,6 +107,7 @@ protected:
     uint8_t nop();
     uint8_t djnz(const MmioDeviceManager& bus);
     uint8_t jr_imm(const MmioDeviceManager& bus);
+    uint8_t jr_cc_imm(const MmioDeviceManager& bus);
 };
 
 } // namespace bz80

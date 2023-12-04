@@ -159,7 +159,7 @@ uint8_t Z80BaseCpu::djnz(const MmioDeviceManager& bus) {
     this->registerBC.addUpper8(-1);
     cycles += INC_DEC_REG_CYCLES;
 
-    uint8_t jumpAmt = bus.read8(this->programCounter++);
+    int8_t jumpAmt = bus.read8(this->programCounter++);
 
     if(this->registerBC.getUpper8() != 0) {
         this->programCounter += jumpAmt;
@@ -178,10 +178,56 @@ uint8_t Z80BaseCpu::djnz(const MmioDeviceManager& bus) {
 uint8_t Z80BaseCpu::jr_imm(const MmioDeviceManager& bus) {
     uint8_t cycles = 0;
 
-    uint8_t jumpAmt = this->bus.read8(this->programCounter++);
+    int8_t jumpAmt = this->bus.read8(this->programCounter++);
     cycles += MEMORY_ACCESS_CYCLES;
     this->programCounter += jumpAmt;
     cycles += 5; // TODO: Figure out why this is 5?
+
+    return cycles;
+}
+
+uint8_t Z80BaseCpu::jr_cc_imm(const MmioDeviceManager& bus) {
+    uint8_t cycles = 0;
+    bool willJump = false;
+
+    switch(this->currentDecodedInstruction.y - 4) {
+    case 0:
+        // NZ
+        if(!this->registerF.zero) {
+            willJump = true;
+        }
+        break;
+    case 1:
+        // Z
+        if(this->registerF.zero) {
+            willJump = true;
+        }
+        break;
+    case 2:
+        // NC
+        if(!this->registerF.carry) {
+            willJump = true;
+        }
+        break;
+    case 3:
+        // C
+        if(this->registerF.carry) {
+            willJump = true;
+        }
+        break;
+    }
+
+    if(willJump) {
+        int8_t value = bus.read8(this->programCounter++);
+        this->programCounter += value;
+        cycles += MEMORY_ACCESS_CYCLES;
+        cycles += INC_DEC_REG_CYCLES;
+        cycles += INC_DEC_REG_CYCLES;
+    } else {
+        this->programCounter++;
+    }
+
+    cycles += TEST_REG_CYCLES;
 
     return cycles;
 }

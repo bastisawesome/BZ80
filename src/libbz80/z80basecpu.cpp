@@ -90,6 +90,9 @@ uint8_t Z80BaseCpu::execute() {
             case 3:
                 return this->jr_imm(bus);
             default:
+                if(4 <= decodedInst.y && decodedInst.y <= 7) {
+                    return this->jr_cc_imm(bus);
+                }
                 assert(false && "Cannot handle this instruction yet.");
             }
         }
