@@ -18,7 +18,7 @@ private:
 
 public:
     MmioRom()
-        : data(std::array<uint8_t, N>()) { }
+        : data(std::array<uint8_t, N> { 0 }) { }
 
     /**
      * @brief read8 Returns value stored in memory at `addr`.

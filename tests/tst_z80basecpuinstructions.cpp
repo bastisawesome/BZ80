@@ -46,6 +46,9 @@ private slots:
     void test_dec_r();
     void test_dec_addr_hl();
     void test_dec_a();
+
+    // NOP
+    void test_nop();
 };
 
 Bz80BaseCpuInstructionsTest::Bz80BaseCpuInstructionsTest() {
@@ -392,6 +395,38 @@ void Bz80BaseCpuInstructionsTest::test_dec_a() {
     QCOMPARE(this->cpu->registerA, static_cast<uint8_t>(startingValue - 1));
     QCOMPARE(foundCycles, expectedCycles);
     QCOMPARE(this->cpu->registerF, expectedFlags);
+}
+
+void Bz80BaseCpuInstructionsTest::test_nop() {
+    uint8_t expRegA = 71;
+    auto expRegBC = bz80::RegisterPairType(159);
+    auto expRegDE = bz80::RegisterPairType(87);
+    auto expRegHL = bz80::RegisterPairType(106);
+    auto expF
+        = FlagRegister { true, false, true, false, false, false, true, true };
+
+    this->cpu->registerA = expRegA;
+    this->cpu->registerBC = expRegBC;
+    this->cpu->registerDE = expRegDE;
+    this->cpu->registerHL = expRegHL;
+    this->cpu->registerF = expF;
+
+    this->cpu->currentOpcode = 0;
+    this->cpu->state = Z80BaseCpu::CpuState::DECODE;
+    this->cpu->tick();
+    uint8_t foundCycles = this->cpu->tick();
+
+    QCOMPARE(foundCycles, 0);
+    QCOMPARE(this->cpu->registerA, expRegA);
+    QCOMPARE(this->cpu->registerBC.get16(), expRegBC.get16());
+    QCOMPARE(this->cpu->registerDE.get16(), expRegDE.get16());
+    QCOMPARE(this->cpu->registerHL.get16(), expRegHL.get16());
+    QCOMPARE(this->cpu->registerF, expF);
+
+    QCOMPARE(this->bus.read16(0), 15);
+    for(size_t i = 2; i < 16; i += 2) {
+        QCOMPARE(this->bus.read16(i), 0);
+    }
 }
 
 QTEST_APPLESS_MAIN(Bz80BaseCpuInstructionsTest)

@@ -148,4 +148,8 @@ uint8_t Z80BaseCpu::dec_r(const MmioDeviceManager& bus) {
 
     return cycles;
 }
+
+uint8_t Z80BaseCpu::nop() {
+    return 0;
+}
 };
