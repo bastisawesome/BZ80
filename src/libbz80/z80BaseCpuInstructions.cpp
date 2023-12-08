@@ -9,7 +9,7 @@ bool calcFlagH(uint8_t origValue, uint8_t toAdd, bool isSub = false) {
         return ((origValue & 0xf) + (toAdd & 0xf)) > 0xf;
     }
 
-    return (toAdd & 0xf) <= (origValue & 0xf);
+    return (origValue & 0xf) < (toAdd & 0xf);
 }
 
 uint8_t Z80BaseCpu::ld_r_imm(const MmioDeviceManager& bus) {

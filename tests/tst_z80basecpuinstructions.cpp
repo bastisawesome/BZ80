@@ -316,37 +316,33 @@ void Bz80BaseCpuInstructionsTest::test_dec_r_data() {
                            << FlagRegister { true, false, false, false,
                                              false, false, false, false,}
                            << FlagRegister { true, true, false, false,
-                                             false, false, true, false};
-    QTest::addRow("DEC C") << (uint8_t)0x0D << (uint8_t)0
-                           << &this->cpu->registerBC << true
-                           << FlagRegister { false, false, false, false, false,
-                                  false, false, false }
-                           << FlagRegister { false, true, false, false, false,
-                                  false, false, true };
-    QTest::addRow("DEC D") << (uint8_t)0x15 << (uint8_t)0x80
-                           << &this->cpu->registerDE << false
-                           << FlagRegister { false, false, false, false, false,
-                                  false, false, false }
-                           << FlagRegister { false, true, true, false, false,
-                                  false, false, false };
-    QTest::addRow("DEC E") << (uint8_t)0x1D << (uint8_t)-122
-                           << &this->cpu->registerDE << true
-                           << FlagRegister { false, false, false, false, false,
-                                  false, false, false }
-                           << FlagRegister { false, true, false, false, false,
-                                  false, false, true };
+                                             true, false, true, false};
+    QTest::addRow("DEC C")
+        << (uint8_t)0x0D << (uint8_t)0 << &this->cpu->registerBC << true
+        << FlagRegister { false, false, false, false, false, false, false,
+               false }
+        << FlagRegister { false, true, false, false, true, false, false, true };
+    QTest::addRow("DEC D")
+        << (uint8_t)0x15 << (uint8_t)0x80 << &this->cpu->registerDE << false
+        << FlagRegister { false, false, false, false, false, false, false,
+               false }
+        << FlagRegister { false, true, true, false, true, false, false, false };
+    QTest::addRow("DEC E")
+        << (uint8_t)0x1D << (uint8_t)-122 << &this->cpu->registerDE << true
+        << FlagRegister { false, false, false, false, false, false, false,
+               false }
+        << FlagRegister { false, true, false, false, true, false, false, true };
     QTest::addRow("DEC H") << (uint8_t)0x25 << (uint8_t)49
                            << &this->cpu->registerHL << false
                            << FlagRegister { false, false, false, false, false,
                                   false, false, false }
-                           << FlagRegister { false, true, false, false, false,
+                           << FlagRegister { false, true, false, false, true,
                                   false, false, false };
-    QTest::addRow("DEC L") << (uint8_t)0x2D << (uint8_t)-25
-                           << &this->cpu->registerHL << true
-                           << FlagRegister { false, false, false, false, false,
-                                  false, false, false }
-                           << FlagRegister { false, true, false, false, false,
-                                  false, false, true };
+    QTest::addRow("DEC L")
+        << (uint8_t)0x2D << (uint8_t)-25 << &this->cpu->registerHL << true
+        << FlagRegister { false, false, false, false, false, false, false,
+               false }
+        << FlagRegister { false, true, false, false, true, false, false, true };
 }
 
 void Bz80BaseCpuInstructionsTest::test_dec_r() {
@@ -379,7 +375,7 @@ void Bz80BaseCpuInstructionsTest::test_dec_r() {
 
 void Bz80BaseCpuInstructionsTest::test_dec_addr_hl() {
     auto expectedFlags
-        = FlagRegister { false, true, false, false, false, false, false, true };
+        = FlagRegister { false, true, false, false, true, false, false, true };
     uint8_t expectedCycles = MEMORY_ACCESS_CYCLES;
     uint8_t startingValue = -67;
 
@@ -388,7 +384,7 @@ void Bz80BaseCpuInstructionsTest::test_dec_addr_hl() {
     this->cpu->registerHL = 15;
     this->cpu->state = Z80BaseCpu::CpuState::DECODE;
     this->cpu->registerF
-        = { false, false, false, false, false, false, false, false };
+        = { false, false, false, false, true, false, false, false };
     this->cpu->tick();
     uint8_t foundCycles = this->cpu->tick();
 
@@ -398,8 +394,8 @@ void Bz80BaseCpuInstructionsTest::test_dec_addr_hl() {
 }
 
 void Bz80BaseCpuInstructionsTest::test_dec_a() {
-    auto expectedFlags = FlagRegister { false, true, false, false, false, false,
-        false, false };
+    auto expectedFlags
+        = FlagRegister { false, true, false, false, true, false, false, false };
     uint8_t expectedCycles = 0;
     uint8_t startingValue = 110;
 
