@@ -15,6 +15,10 @@
 #define INC_DEC_REG_CYCLES (uint8_t)1
 #define TEST_REG_CYCLES (uint8_t)3
 
+/*
+ * TODO: Remove `bus` from instruction methods.
+ */
+
 class Bz80BaseCpuInstructionsTest;
 
 namespace bz80 {
@@ -108,6 +112,7 @@ protected:
     uint8_t djnz(const MmioDeviceManager& bus);
     uint8_t jr_imm(const MmioDeviceManager& bus);
     uint8_t jr_cc_imm(const MmioDeviceManager& bus);
+    uint8_t add_a_r(const MmioDeviceManager& bus);
 };
 
 } // namespace bz80

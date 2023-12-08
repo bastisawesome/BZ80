@@ -62,6 +62,12 @@ private slots:
     // JR cc, IMM
     void test_jr_cc_imm_data();
     void test_jr_cc_imm();
+
+    // ADD A, r
+    void test_add_r_data();
+    void test_add_r();
+    void test_add_addr_hl();
+    void test_add_a();
 };
 
 Bz80BaseCpuInstructionsTest::Bz80BaseCpuInstructionsTest() {
@@ -583,6 +589,164 @@ void Bz80BaseCpuInstructionsTest::test_jr_cc_imm() {
     QCOMPARE(this->cpu->programCounter, expectedPC);
     QCOMPARE(this->cpu->registerF, startingFlags);
     QCOMPARE(cycles, expCycles);
+}
+
+void Bz80BaseCpuInstructionsTest::test_add_r_data() {
+    QTest::addColumn<uint8_t>("opcode");
+    QTest::addColumn<int8_t>("startingAValue");
+    QTest::addColumn<RegisterPairType*>("regToAdd");
+    QTest::addColumn<bool>("isUpperReg");
+    QTest::addColumn<int8_t>("startingRegValue");
+    QTest::addColumn<FlagRegister>("expectedFlags");
+
+    QTest::addRow("ADD A, B")
+        << (uint8_t)0x80 << (int8_t)0 << &this->cpu->registerBC << true
+        << (int8_t)19
+        << FlagRegister { .carry = false,
+               .add_sub = false,
+               .overflow = false,
+               .unused1 = false,
+               .halfcarry = false,
+               .unused2 = false,
+               .zero = false,
+               .sign = false };
+
+    QTest::addRow("ADD A, C")
+        << (uint8_t)0x81 << (int8_t)98 << &this->cpu->registerBC << false
+        << (int8_t)70
+        << FlagRegister { .carry = false,
+               .add_sub = false,
+               .overflow = true,
+               .unused1 = false,
+               .halfcarry = false,
+               .unused2 = false,
+               .zero = false,
+               .sign = true };
+
+    QTest::addRow("ADD A, D")
+        << (uint8_t)0x82 << (int8_t)-42 << &this->cpu->registerDE << true
+        << (int8_t)42
+        << FlagRegister { .carry = false,
+               .add_sub = false,
+               .overflow = false,
+               .unused1 = false,
+               .halfcarry = true,
+               .unused2 = false,
+               .zero = true,
+               .sign = false };
+
+    QTest::addRow("ADD A, E")
+        << (uint8_t)0x83 << (int8_t)-12 << &this->cpu->registerDE << false
+        << (int8_t)-100
+        << FlagRegister { .carry = false,
+               .add_sub = false,
+               .overflow = false,
+               .unused1 = false,
+               .halfcarry = true,
+               .unused2 = false,
+               .zero = false,
+               .sign = true };
+
+    QTest::addRow("ADD A, H")
+        << (uint8_t)0x84 << (int8_t)-113 << &this->cpu->registerHL << true
+        << (int8_t)-68
+        << FlagRegister { .carry = false,
+               .add_sub = false,
+               .overflow = true,
+               .unused1 = false,
+               .halfcarry = true,
+               .unused2 = false,
+               .zero = false,
+               .sign = false };
+
+    QTest::addRow("ADD A, L")
+        << (uint8_t)0x85 << (int8_t)26 << &this->cpu->registerHL << false
+        << (int8_t)-51
+        << FlagRegister { .carry = false,
+               .add_sub = false,
+               .overflow = false,
+               .unused1 = false,
+               .halfcarry = true,
+               .unused2 = false,
+               .zero = false,
+               .sign = true };
+}
+
+void Bz80BaseCpuInstructionsTest::test_add_r() {
+    QFETCH(uint8_t, opcode);
+    QFETCH(int8_t, startingAValue);
+    QFETCH(RegisterPairType*, regToAdd);
+    QFETCH(bool, isUpperReg);
+    QFETCH(int8_t, startingRegValue);
+    QFETCH(FlagRegister, expectedFlags);
+
+    const int8_t expectedAccValue = startingAValue + startingRegValue;
+    const uint8_t expectedCycles = 0;
+
+    if(isUpperReg) {
+        regToAdd->setUpper8(startingRegValue);
+    } else {
+        regToAdd->setLower8(startingRegValue);
+    }
+
+    this->cpu->currentOpcode = opcode;
+    this->cpu->state = Z80BaseCpu::CpuState::DECODE;
+    this->cpu->registerA = startingAValue;
+    this->cpu->tick();
+    const uint8_t cycles = this->cpu->tick();
+
+    QCOMPARE(this->cpu->registerA, (uint8_t)expectedAccValue);
+    QCOMPARE(this->cpu->registerF, expectedFlags);
+    QCOMPARE(cycles, expectedCycles);
+}
+
+void Bz80BaseCpuInstructionsTest::test_add_addr_hl() {
+    this->bus.write8(3, 107);
+
+    const int8_t expectedValue = 121;
+    const uint8_t expectedCycles = MEMORY_ACCESS_CYCLES;
+    const FlagRegister expectedFlags { .carry = false,
+        .add_sub = false,
+        .overflow = false,
+        .unused1 = false,
+        .halfcarry = true,
+        .unused2 = false,
+        .zero = false,
+        .sign = false };
+
+    this->cpu->registerA = 14;
+    this->cpu->registerHL.set16(3);
+    this->cpu->currentOpcode = 0x86;
+    this->cpu->state = Z80BaseCpu::CpuState::DECODE;
+    this->cpu->tick();
+    const uint8_t cycles = this->cpu->tick();
+
+    QCOMPARE(this->cpu->registerA, expectedValue);
+    QCOMPARE(this->cpu->registerF, expectedFlags);
+    QCOMPARE(cycles, expectedCycles);
+}
+
+void Bz80BaseCpuInstructionsTest::test_add_a() {
+    const int8_t expectedValue = (int8_t)-164;
+    const uint8_t expectedCycles = 0;
+    const FlagRegister expectedFlags { .carry = false,
+        .add_sub = false,
+        .overflow = true,
+        .unused1 = false,
+        .halfcarry = true,
+        .unused2 = false,
+        .zero = false,
+        .sign = false };
+
+    this->cpu->registerA = -82;
+    this->cpu->currentOpcode = 0x87;
+    this->cpu->state = Z80BaseCpu::CpuState::DECODE;
+    this->cpu->tick();
+    const uint8_t cycles = this->cpu->tick();
+
+    QCOMPARE(this->cpu->registerA, expectedValue);
+    QCOMPARE(this->cpu->registerF, expectedFlags);
+    QCOMPARE(cycles, expectedCycles);
 }
 
 QTEST_APPLESS_MAIN(Bz80BaseCpuInstructionsTest)

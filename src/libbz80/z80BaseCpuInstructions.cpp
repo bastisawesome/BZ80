@@ -231,4 +231,61 @@ uint8_t Z80BaseCpu::jr_cc_imm(const MmioDeviceManager& bus) {
 
     return cycles;
 }
+
+uint8_t Z80BaseCpu::add_a_r(const MmioDeviceManager& bus) {
+    uint8_t cycles = 0;
+    int8_t value;
+    switch(this->currentDecodedInstruction.z) {
+    case 0:
+        value = this->registerBC.getUpper8();
+        break;
+    case 1:
+        value = this->registerBC.getLower8();
+        break;
+    case 2:
+        value = this->registerDE.getUpper8();
+        break;
+    case 3:
+        value = this->registerDE.getLower8();
+        break;
+    case 4:
+        value = this->registerHL.getUpper8();
+        break;
+    case 5:
+        value = this->registerHL.getLower8();
+        break;
+    case 6:
+        value = bus.read8(this->registerHL.get16());
+        cycles += MEMORY_ACCESS_CYCLES;
+        break;
+    case 7:
+        value = this->registerA;
+        break;
+    default:
+        return 255;
+    }
+
+    const int16_t newValue = (int8_t)this->registerA + (int8_t)value;
+
+    bool didOverflow;
+
+    if((this->registerA & (1 << 7)) == (value & (1 << 7))) {
+        didOverflow
+            = (this->registerA & (1 << 7)) != ((uint8_t)newValue & (1 << 7));
+    } else {
+        didOverflow = false;
+    }
+
+    this->registerF.carry = ((int16_t)newValue) > 255;
+    this->registerF.add_sub = false;
+    this->registerF.overflow = didOverflow;
+    this->registerF.halfcarry = calcFlagH(this->registerA, value);
+    this->registerF.zero = newValue == 0;
+    this->registerF.sign = (int8_t)newValue < 0;
+
+    this->registerA = (uint8_t)newValue;
+
+    return cycles;
+}
+
 };
