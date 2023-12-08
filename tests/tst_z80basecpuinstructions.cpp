@@ -316,12 +316,13 @@ void Bz80BaseCpuInstructionsTest::test_dec_r_data() {
                            << FlagRegister { true, false, false, false,
                                              false, false, false, false,}
                            << FlagRegister { true, true, false, false,
-                                             true, false, true, false};
-    QTest::addRow("DEC C")
-        << (uint8_t)0x0D << (uint8_t)0 << &this->cpu->registerBC << true
-        << FlagRegister { false, false, false, false, false, false, false,
-               false }
-        << FlagRegister { false, true, false, false, true, false, false, true };
+                                             false, false, true, false};
+    QTest::addRow("DEC C") << (uint8_t)0x0D << (uint8_t)0
+                           << &this->cpu->registerBC << true
+                           << FlagRegister { false, false, false, false, false,
+                                  false, false, false }
+                           << FlagRegister { false, true, false, false, false,
+                                  false, false, true };
     QTest::addRow("DEC D")
         << (uint8_t)0x15 << (uint8_t)0x80 << &this->cpu->registerDE << false
         << FlagRegister { false, false, false, false, false, false, false,
@@ -336,7 +337,7 @@ void Bz80BaseCpuInstructionsTest::test_dec_r_data() {
                            << &this->cpu->registerHL << false
                            << FlagRegister { false, false, false, false, false,
                                   false, false, false }
-                           << FlagRegister { false, true, false, false, true,
+                           << FlagRegister { false, true, false, false, false,
                                   false, false, false };
     QTest::addRow("DEC L")
         << (uint8_t)0x2D << (uint8_t)-25 << &this->cpu->registerHL << true
@@ -394,8 +395,8 @@ void Bz80BaseCpuInstructionsTest::test_dec_addr_hl() {
 }
 
 void Bz80BaseCpuInstructionsTest::test_dec_a() {
-    auto expectedFlags
-        = FlagRegister { false, true, false, false, true, false, false, false };
+    auto expectedFlags = FlagRegister { false, true, false, false, false, false,
+        false, false };
     uint8_t expectedCycles = 0;
     uint8_t startingValue = 110;
 
