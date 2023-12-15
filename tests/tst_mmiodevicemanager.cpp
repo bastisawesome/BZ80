@@ -1,15 +1,15 @@
 #include <QtTest>
 
 // add necessary includes here
+#include <map>
 #include <memory>
+#include <mmioDevice.hpp>
 #include <mmioDeviceManager.hpp>
 #include <mmioRam.hpp>
-#include <mmioDevice.hpp>
-#include <map>
 
+using bz80::MmioDevice;
 using bz80::MmioDeviceManager;
 using bz80::MmioRam;
-using bz80::MmioDevice;
 
 class MmioDeviceManagerTest : public QObject {
     Q_OBJECT
@@ -40,12 +40,13 @@ private slots:
     void test_add_device();
 };
 
-MmioDeviceManagerTest::MmioDeviceManagerTest() {}
+MmioDeviceManagerTest::MmioDeviceManagerTest() { }
 
-MmioDeviceManagerTest::~MmioDeviceManagerTest() {}
+MmioDeviceManagerTest::~MmioDeviceManagerTest() { }
 
 void MmioDeviceManagerTest::init() {
-    this->deviceManager = std::unique_ptr<MmioDeviceManager>(new MmioDeviceManager());
+    this->deviceManager
+        = std::unique_ptr<MmioDeviceManager>(new MmioDeviceManager());
     std::unique_ptr<MmioDevice> ram(new MmioRam<15>());
     ram->write8(0, 42);
     ram->write8(1, 69);
@@ -91,7 +92,6 @@ void MmioDeviceManagerTest::test_get_nearest_device_one_device() {
 void MmioDeviceManagerTest::test_get_nearest_device_no_devices() {
     this->deviceManager->devices.erase(0);
     auto const device = this->deviceManager->getNearestDevice(0);
-    auto const whatIsThis = &device->second;
 
     QCOMPARE(device, this->deviceManager->devices.end());
 }
