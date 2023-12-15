@@ -117,7 +117,9 @@ uint8_t Z80BaseCpu::execute() {
     case 2: {
         switch(this->currentDecodedInstruction.y) {
         case 0:
-            return this->add_a_r(this->bus);
+            return this->add_a_r(bus);
+        case 2:
+            return this->sub_r(bus);
         default:
             assert(false && "Cannot handle this instruction yet.");
         }

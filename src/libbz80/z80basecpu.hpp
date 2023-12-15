@@ -4,7 +4,6 @@
 #include <array>
 #include <cstdint>
 #include <functional>
-#include <strstream>
 
 #include "mmioDeviceManager.hpp"
 #include "registerpairtype.hpp"
@@ -113,6 +112,7 @@ protected:
     uint8_t jr_imm(const MmioDeviceManager& bus);
     uint8_t jr_cc_imm(const MmioDeviceManager& bus);
     uint8_t add_a_r(const MmioDeviceManager& bus);
+    uint8_t sub_r(const MmioDeviceManager& bus);
 };
 
 } // namespace bz80
