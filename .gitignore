@@ -58,3 +58,5 @@ build/
 
 # Clangd
 .cache/
+
+*__pycache__*
