@@ -1,5 +1,7 @@
 #include "qtestcase.h"
 #include <QTest>
+#include <ctime>
+#include <random>
 
 #include <mmioDeviceManager.hpp>
 #include <mmioRam.hpp>
@@ -15,6 +17,19 @@ using bz80::Z80BaseCpu;
 /**
  * TODO: Merge INC r and DEC r instruction tests, they are identical-ish.
  */
+
+FlagRegister genRandomFlags() {
+    srand(time(0));
+    uint8_t rand = (uint8_t)random();
+    return FlagRegister { .carry = (bool)(rand & 0x1),
+        .add_sub = (bool)(rand & 0x2),
+        .overflow = (bool)(rand & 0x4),
+        .unused1 = false,
+        .halfcarry = (bool)(rand & 0x10),
+        .unused2 = false,
+        .zero = (bool)(rand & 0x40),
+        .sign = (bool)(rand & 0x80) };
+}
 
 class Bz80BaseCpuInstructionsTest : public QObject {
     Q_OBJECT
@@ -74,6 +89,26 @@ private slots:
     void test_sub_r();
     void test_sub_addr_hl();
     void test_sub_a();
+
+    // LD r, r
+    // TODO: Remove flag register from the test data.
+    //  The flag register could be seeded with random data, as it is expected
+    //  to always contain the same data at the start as it does at the end.
+    //  Randomness _should_, in theory, provide enough proof that the flags
+    //  are unaltered.
+    void test_ld_r_r_data();
+    void test_ld_r_r();
+    void test_ld_r_addr_hl_data();
+    void test_ld_r_addr_hl();
+    void test_ld_r_a_data();
+    void test_ld_r_a();
+    void test_ld_addr_hl_r_data();
+    void test_ld_addr_hl_r();
+    void test_ld_addr_hl_a();
+    void test_ld_a_r_data();
+    void test_ld_a_r();
+    void test_ld_a_addr_hl();
+    void test_ld_a_a();
 };
 
 Bz80BaseCpuInstructionsTest::Bz80BaseCpuInstructionsTest() {
@@ -910,6 +945,466 @@ void Bz80BaseCpuInstructionsTest::test_sub_a() {
     QCOMPARE(this->cpu->registerA, expectedResult);
     QCOMPARE(this->cpu->registerF, expectedFlags);
     QCOMPARE(cycles, expectedCycles);
+}
+
+void Bz80BaseCpuInstructionsTest::test_ld_r_r_data() {
+    QTest::addColumn<uint8_t>("opcode");
+    QTest::addColumn<RegisterPairType*>("toRegister");
+    QTest::addColumn<bool>("isLowByte");
+    QTest::addColumn<RegisterPairType*>("fromRegisterPair");
+    QTest::addColumn<uint16_t>("startingValue");
+    QTest::addColumn<FlagRegister>("startingFlags");
+
+    QTest::newRow("ld b, b/ld b, c")
+        << (uint8_t)0x40 << &this->cpu->registerBC << false
+        << &this->cpu->registerBC << (uint16_t)0x71f3
+        << FlagRegister { .carry = false,
+               .add_sub = true,
+               .overflow = true,
+               .unused1 = false,
+               .halfcarry = false,
+               .unused2 = false,
+               .zero = false,
+               .sign = true };
+
+    QTest::newRow("ld b, d/ld b, e")
+        << (uint8_t)0x42 << &this->cpu->registerBC << false
+        << &this->cpu->registerDE << (uint16_t)0xdc05
+        << FlagRegister { .carry = true,
+               .overflow = false,
+               .unused1 = false,
+               .halfcarry = true,
+               .unused2 = false,
+               .zero = true,
+               .sign = false };
+
+    QTest::newRow("ld b, h/ld b, l")
+        << (uint8_t)0x44 << &this->cpu->registerBC << false
+        << &this->cpu->registerHL << (uint16_t)0xcb7c
+        << FlagRegister { true, true, true, false, true, false, false, true };
+
+    QTest::newRow("ld c, b/ld c, c")
+        << (uint8_t)0x48 << &this->cpu->registerBC << true
+        << &this->cpu->registerBC << (uint16_t)0xb09b
+        << FlagRegister { false, false, false, false, true, false, false,
+               false };
+
+    QTest::newRow("ld c, d/ld c, e")
+        << (uint8_t)0x4a << &this->cpu->registerBC << true
+        << &this->cpu->registerDE << (uint16_t)0xd54f
+        << FlagRegister { true, false, true, false, true, false, false, false };
+
+    QTest::newRow("ld c, h/ld c, l")
+        << (uint8_t)0x4c << &this->cpu->registerBC << true
+        << &this->cpu->registerHL << (uint16_t)0x9fcd
+        << FlagRegister { true, true, true, false, true, false, true, false };
+
+    QTest::newRow("ld d, b/ld d, c")
+        << (uint8_t)0x50 << &this->cpu->registerDE << false
+        << &this->cpu->registerBC << (uint16_t)0xc6ea
+        << FlagRegister { true, true, true, false, false, false, false, false };
+
+    QTest::newRow("ld d, d/ld d, e")
+        << (uint8_t)0x52 << &this->cpu->registerDE << false
+        << &this->cpu->registerDE << (uint16_t)0x07dd
+        << FlagRegister { false, true, false, false, true, false, true, true };
+
+    QTest::newRow("ld d, h/ld d, l")
+        << (uint8_t)0x54 << &this->cpu->registerDE << false
+        << &this->cpu->registerHL << (uint16_t)0xa9de
+        << FlagRegister { false, false, true, false, false, false, true,
+               false };
+
+    QTest::newRow("ld e, b/ld e, c")
+        << (uint8_t)0x58 << &this->cpu->registerDE << true
+        << &this->cpu->registerBC << (uint16_t)0x5df8
+        << FlagRegister { false, false, false, false, false, false, true,
+               true };
+
+    QTest::newRow("ld e, d/ld e, e")
+        << (uint8_t)0x5a << &this->cpu->registerDE << true
+        << &this->cpu->registerDE << (uint16_t)0x09e5
+        << FlagRegister { true, true, true, false, true, false, true, true };
+
+    QTest::newRow("ld e, h/ld e, l")
+        << (uint8_t)0x5c << &this->cpu->registerDE << true
+        << &this->cpu->registerHL << (uint16_t)0xe5ad
+        << FlagRegister { true, false, false, false, true, false, false, true };
+
+    QTest::newRow("ld h, b/ld h, c")
+        << (uint8_t)0x60 << &this->cpu->registerHL << false
+        << &this->cpu->registerBC << (uint16_t)0x6392
+        << FlagRegister { true, true, true, false, false, false, true, false };
+
+    QTest::newRow("ld h, d/ld h, e")
+        << (uint8_t)0x62 << &this->cpu->registerHL << false
+        << &this->cpu->registerDE << (uint16_t)0x20ce
+        << FlagRegister { true, false, false, false, true, false, false, true };
+
+    QTest::newRow("ld h, h/ld h, l")
+        << (uint8_t)0x64 << &this->cpu->registerHL << false
+        << &this->cpu->registerHL << (uint16_t)0x43c8
+        << FlagRegister { true, true, false, false, true, false, false, true };
+
+    QTest::newRow("ld l, b/ld l, c")
+        << (uint8_t)0x68 << &this->cpu->registerHL << true
+        << &this->cpu->registerBC << (uint16_t)0x60ef
+        << FlagRegister { true, false, true, false, true, false, false, true };
+
+    QTest::newRow("ld l, d/ld l, e")
+        << (uint8_t)0x6a << &this->cpu->registerHL << true
+        << &this->cpu->registerDE << (uint16_t)0x312b
+        << FlagRegister { true, true, true, false, true, false, false, false };
+
+    QTest::newRow("ld l, h/ld l, l")
+        << (uint8_t)0x6c << &this->cpu->registerHL << true
+        << &this->cpu->registerHL << (uint16_t)0x1583
+        << FlagRegister { false, false, true, false, false, false, true, true };
+}
+
+void Bz80BaseCpuInstructionsTest::test_ld_r_r() {
+    /*
+     * The debug output seems to cause problems?
+     * Not sure what the issue is, but it segfaults, then spinlocks until
+     * timeout. Need to look into this issue later.
+     * Except after fixing the test properly, now all the pointers are wrong.
+     * It's like it duplicates the CPU class, then forgets about the new one? I
+     * cannot figure this out.
+     */
+    //    qDebug() << QTest::currentDataTag();
+    //    QStringList testNames = QString(QTest::currentDataTag()).split("/");
+    //    QString testName1 = testNames[0];
+    //    QString testName2 = testNames[1];
+
+    QFETCH(uint8_t, opcode);
+    QFETCH(RegisterPairType*, toRegister);
+    QFETCH(bool, isLowByte);
+    QFETCH(RegisterPairType*, fromRegisterPair);
+    QFETCH(uint16_t, startingValue);
+    QFETCH(FlagRegister, startingFlags);
+    this->cpu->registerF = startingFlags;
+
+    const uint8_t expCycles = 0;
+
+    uint8_t cycles;
+    uint8_t result;
+
+    //    qDebug() << testName1;
+    fromRegisterPair->set16(startingValue);
+    this->cpu->currentOpcode = opcode;
+    this->cpu->state = Z80BaseCpu::CpuState::DECODE;
+    this->cpu->tick();
+    cycles = this->cpu->tick();
+
+    if(isLowByte) {
+        result = toRegister->getLower8();
+    } else {
+        result = toRegister->getUpper8();
+    }
+
+    QCOMPARE(result, (startingValue >> 8));
+    QCOMPARE(this->cpu->registerF, startingFlags);
+    QCOMPARE(cycles, expCycles);
+
+    //    qDebug() << testName2;
+    fromRegisterPair->set16(startingValue);
+    this->cpu->currentOpcode = opcode + 1;
+    this->cpu->state = Z80BaseCpu::CpuState::DECODE;
+    this->cpu->tick();
+    cycles = this->cpu->tick();
+
+    if(isLowByte) {
+        result = toRegister->getLower8();
+    } else {
+        result = toRegister->getUpper8();
+    }
+
+    QCOMPARE(result, (startingValue & 0xff));
+    QCOMPARE(this->cpu->registerF, startingFlags);
+    QCOMPARE(cycles, expCycles);
+}
+
+void Bz80BaseCpuInstructionsTest::test_ld_r_addr_hl_data() {
+    QTest::addColumn<uint8_t>("opcode");
+    QTest::addColumn<RegisterPairType*>("toRegister");
+    QTest::addColumn<bool>("isLowByte");
+    QTest::addColumn<uint16_t>("startingAddress");
+    QTest::addColumn<uint8_t>("startingValue");
+    QTest::addColumn<FlagRegister>("startingFlags");
+
+    QTest::newRow("ld b, (hl)")
+        << (uint8_t)0x46 << &this->cpu->registerBC << false << (uint16_t)0x2
+        << (uint8_t)0x9e
+        << FlagRegister { true, true, true, false, true, false, true, true };
+
+    QTest::newRow("ld c, (hl)")
+        << (uint8_t)0x4e << &this->cpu->registerBC << true << (uint16_t)0x10
+        << (uint8_t)0x9a
+        << FlagRegister { true, true, false, false, true, false, false, true };
+
+    QTest::newRow("ld d, (hl)")
+        << (uint8_t)0x56 << &this->cpu->registerDE << false << (uint16_t)0x8
+        << (uint8_t)0xca
+        << FlagRegister { true, true, false, true, false, false, true };
+
+    QTest::newRow("ld e, (hl)")
+        << (uint8_t)0x5e << &this->cpu->registerDE << true << (uint16_t)0x10
+        << (uint8_t)0x68
+        << FlagRegister { false, true, true, false, false, false, true, true };
+
+    QTest::newRow("ld h, (hl)")
+        << (uint8_t)0x66 << &this->cpu->registerHL << false << (uint16_t)0x6
+        << (uint8_t)0xf0
+        << FlagRegister { true, true, false, false, true, false, false, true };
+
+    QTest::newRow("ld l, (hl)")
+        << (uint8_t)0x6e << &this->cpu->registerHL << true << (uint16_t)0x8
+        << (uint8_t)0x5
+        << FlagRegister { false, false, false, false, false, false, true,
+               false };
+}
+
+void Bz80BaseCpuInstructionsTest::test_ld_r_addr_hl() {
+    QFETCH(uint8_t, opcode);
+    QFETCH(RegisterPairType*, toRegister);
+    QFETCH(bool, isLowByte);
+    QFETCH(uint16_t, startingAddress);
+    QFETCH(uint8_t, startingValue);
+    QFETCH(FlagRegister, startingFlags);
+
+    const uint8_t expCycles = MEMORY_ACCESS_CYCLES;
+
+    this->cpu->bus.write8(startingAddress, startingValue);
+    this->cpu->registerHL.set16(startingAddress);
+    this->cpu->registerF = startingFlags;
+    this->cpu->currentOpcode = opcode;
+    this->cpu->state = Z80BaseCpu::CpuState::DECODE;
+    this->cpu->tick();
+    uint8_t cycles = this->cpu->tick();
+
+    uint8_t value;
+
+    if(isLowByte) {
+        value = toRegister->getLower8();
+    } else {
+        value = toRegister->getUpper8();
+    }
+
+    QCOMPARE(value, startingValue);
+    QCOMPARE(this->cpu->registerF, startingFlags);
+    QCOMPARE(cycles, expCycles);
+}
+
+void Bz80BaseCpuInstructionsTest::test_ld_r_a_data() {
+    QTest::addColumn<uint8_t>("opcode");
+    QTest::addColumn<RegisterPairType*>("toRegister");
+    QTest::addColumn<bool>("isLowByte");
+    QTest::addColumn<uint8_t>("startingValue");
+
+    QTest::addRow("ld b, a")
+        << (uint8_t)0x47 << &this->cpu->registerBC << false << (uint8_t)0xc9;
+
+    QTest::addRow("ld c, a")
+        << (uint8_t)0x4f << &this->cpu->registerBC << true << (uint8_t)0x6a;
+
+    QTest::addRow("ld d, a")
+        << (uint8_t)0x57 << &this->cpu->registerDE << false << (uint8_t)0x63;
+
+    QTest::addRow("ld e, a")
+        << (uint8_t)0x5f << &this->cpu->registerDE << true << (uint8_t)0xa4;
+
+    QTest::addRow("ld h, a")
+        << (uint8_t)0x67 << &this->cpu->registerHL << false << (uint8_t)0x86;
+
+    QTest::addRow("ld l, a")
+        << (uint8_t)0x6f << &this->cpu->registerHL << true << (uint8_t)0xfc;
+}
+
+void Bz80BaseCpuInstructionsTest::test_ld_r_a() {
+    QFETCH(uint8_t, opcode);
+    QFETCH(RegisterPairType*, toRegister);
+    QFETCH(bool, isLowByte);
+    QFETCH(uint8_t, startingValue);
+
+    uint8_t value;
+    const uint8_t expCycles = 0;
+    const FlagRegister expFlags = genRandomFlags();
+
+    this->cpu->registerA = startingValue;
+    this->cpu->registerF = expFlags;
+    this->cpu->state = Z80BaseCpu::CpuState::DECODE;
+    this->cpu->currentOpcode = opcode;
+    this->cpu->tick();
+    uint8_t cycles = this->cpu->tick();
+
+    if(isLowByte) {
+        value = toRegister->getLower8();
+    } else {
+        value = toRegister->getUpper8();
+    }
+
+    QCOMPARE(value, startingValue);
+    QCOMPARE(this->cpu->registerF, expFlags);
+    QCOMPARE(cycles, expCycles);
+}
+
+void Bz80BaseCpuInstructionsTest::test_ld_addr_hl_r_data() {
+    QTest::addColumn<uint8_t>("opcode");
+    QTest::addColumn<RegisterPairType*>("fromRegister");
+    QTest::addColumn<bool>("isLowByte");
+    QTest::addColumn<uint16_t>("address");
+    QTest::addColumn<uint8_t>("startingValue");
+
+    QTest::addRow("ld (hl), b") << (uint8_t)0x70 << &this->cpu->registerBC
+                                << false << (uint16_t)0xd << (uint8_t)0xe3;
+
+    QTest::addRow("ld (hl), c") << (uint8_t)0x71 << &this->cpu->registerBC
+                                << true << (uint16_t)0x10 << (uint8_t)0xad;
+
+    QTest::addRow("ld (hl), d") << (uint8_t)0x72 << &this->cpu->registerDE
+                                << false << (uint16_t)0xa << (uint8_t)0x1f;
+
+    QTest::addRow("ld (hl), e") << (uint8_t)0x73 << &this->cpu->registerDE
+                                << true << (uint16_t)0xc << (uint8_t)0x6c;
+
+    QTest::addRow("ld (hl), h") << (uint8_t)0x74 << &this->cpu->registerHL
+                                << false << (uint16_t)0xb << (uint8_t)0;
+
+    QTest::addRow("ld (hl), l") << (uint8_t)0x75 << &this->cpu->registerHL
+                                << true << (uint16_t)0x1 << (uint8_t)0x1;
+}
+
+void Bz80BaseCpuInstructionsTest::test_ld_addr_hl_r() {
+    QFETCH(uint8_t, opcode);
+    QFETCH(RegisterPairType*, fromRegister);
+    QFETCH(bool, isLowByte);
+    QFETCH(uint16_t, address);
+    QFETCH(uint8_t, startingValue);
+
+    const uint8_t expCycles = MEMORY_ACCESS_CYCLES;
+    const FlagRegister expFlags = genRandomFlags();
+
+    this->cpu->registerF = expFlags;
+    this->cpu->registerHL.set16(address);
+
+    if(isLowByte) {
+        fromRegister->setLower8(startingValue);
+    } else {
+        fromRegister->setUpper8(startingValue);
+    }
+
+    this->cpu->state = Z80BaseCpu::CpuState::DECODE;
+    this->cpu->currentOpcode = opcode;
+    this->cpu->tick();
+    uint8_t cycles = this->cpu->tick();
+
+    QCOMPARE(this->cpu->bus.read8(address), startingValue);
+    QCOMPARE(this->cpu->registerF, expFlags);
+    QCOMPARE(cycles, expCycles);
+}
+
+void Bz80BaseCpuInstructionsTest::test_ld_addr_hl_a() {
+    const uint8_t opcode = 0x77;
+    const uint16_t startingAddress = 0x5;
+    const uint8_t startingValue = 0x71;
+    const uint8_t expCycles = MEMORY_ACCESS_CYCLES;
+    const FlagRegister startingFlags = genRandomFlags();
+
+    this->cpu->registerA = startingValue;
+    this->cpu->registerF = startingFlags;
+    this->cpu->registerHL.set16(startingAddress);
+    this->cpu->currentOpcode = opcode;
+    this->cpu->state = Z80BaseCpu::CpuState::DECODE;
+    this->cpu->tick();
+    uint8_t cycles = this->cpu->tick();
+
+    QCOMPARE(this->cpu->bus.read8(startingAddress), startingValue);
+    QCOMPARE(this->cpu->registerF, startingFlags);
+    QCOMPARE(cycles, expCycles);
+}
+
+void Bz80BaseCpuInstructionsTest::test_ld_a_r_data() {
+    QTest::addColumn<uint8_t>("opcode");
+    QTest::addColumn<RegisterPairType*>("fromRegister");
+    QTest::addColumn<bool>("isLowByte");
+    QTest::addColumn<uint8_t>("startingValue");
+
+    QTest::addRow("ld a, b")
+        << (uint8_t)0x78 << &this->cpu->registerBC << false << (uint8_t)0xdf;
+    QTest::addRow("ld a, c")
+        << (uint8_t)0x79 << &this->cpu->registerBC << true << (uint8_t)0x81;
+    QTest::addRow("ld a, d")
+        << (uint8_t)0x7a << &this->cpu->registerDE << false << (uint8_t)0x90;
+    QTest::addRow("ld a, e")
+        << (uint8_t)0x7b << &this->cpu->registerDE << true << (uint8_t)0xd2;
+    QTest::addRow("ld a, h")
+        << (uint8_t)0x7c << &this->cpu->registerHL << false << (uint8_t)0xcc;
+    QTest::addRow("ld a, l")
+        << (uint8_t)0x7d << &this->cpu->registerHL << true << (uint8_t)0xd3;
+}
+
+void Bz80BaseCpuInstructionsTest::test_ld_a_r() {
+    QFETCH(uint8_t, opcode);
+    QFETCH(RegisterPairType*, fromRegister);
+    QFETCH(bool, isLowByte);
+    QFETCH(uint8_t, startingValue);
+
+    const uint8_t expCycles = 0;
+    const FlagRegister expFlags = genRandomFlags();
+
+    if(isLowByte) {
+        fromRegister->setLower8(startingValue);
+    } else {
+        fromRegister->setUpper8(startingValue);
+    }
+
+    this->cpu->registerF = expFlags;
+    this->cpu->state = Z80BaseCpu::CpuState::DECODE;
+    this->cpu->currentOpcode = opcode;
+    this->cpu->tick();
+    uint8_t cycles = this->cpu->tick();
+
+    QCOMPARE(this->cpu->registerA, startingValue);
+    QCOMPARE(this->cpu->registerF, expFlags);
+    QCOMPARE(cycles, expCycles);
+}
+
+void Bz80BaseCpuInstructionsTest::test_ld_a_addr_hl() {
+    const uint8_t opcode = 0x7e;
+    const uint8_t startingValue = 0xa2;
+    const uint16_t address = 0x1;
+    const uint8_t expCycles = MEMORY_ACCESS_CYCLES;
+    const FlagRegister expFlags = genRandomFlags();
+
+    this->bus.write8(address, startingValue);
+    this->cpu->registerHL.set16(address);
+    this->cpu->registerF = expFlags;
+    this->cpu->currentOpcode = opcode;
+    this->cpu->state = Z80BaseCpu::CpuState::DECODE;
+    this->cpu->tick();
+    uint8_t cycles = this->cpu->tick();
+
+    QCOMPARE(this->cpu->registerA, startingValue);
+    QCOMPARE(this->cpu->registerF, expFlags);
+    QCOMPARE(cycles, expCycles);
+}
+
+void Bz80BaseCpuInstructionsTest::test_ld_a_a() {
+    const uint8_t opcode = 0x7f;
+    const uint8_t startingValue = 0xfe;
+    const uint8_t expCycles = 0;
+    const FlagRegister expFlags = genRandomFlags();
+
+    this->cpu->registerA = startingValue;
+    this->cpu->registerF = expFlags;
+    this->cpu->currentOpcode = opcode;
+    this->cpu->state = Z80BaseCpu::CpuState::DECODE;
+    this->cpu->tick();
+    uint8_t cycles = this->cpu->tick();
+
+    QCOMPARE(this->cpu->registerA, startingValue);
+    QCOMPARE(this->cpu->registerF, expFlags);
+    QCOMPARE(cycles, expCycles);
 }
 
 QTEST_APPLESS_MAIN(Bz80BaseCpuInstructionsTest)

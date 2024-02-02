@@ -345,4 +345,71 @@ uint8_t Z80BaseCpu::sub_r(const MmioDeviceManager& bus) {
     return cycles;
 }
 
+uint8_t Z80BaseCpu::ld_r_r(const MmioDeviceManager& bus) {
+    uint8_t cycles = 0;
+    uint8_t value;
+
+    switch(this->currentDecodedInstruction.z) {
+    case 0:
+        value = this->registerBC.getUpper8();
+        break;
+    case 1:
+        value = this->registerBC.getLower8();
+        break;
+    case 2:
+        value = this->registerDE.getUpper8();
+        break;
+    case 3:
+        value = this->registerDE.getLower8();
+        break;
+    case 4:
+        value = this->registerHL.getUpper8();
+        break;
+    case 5:
+        value = this->registerHL.getLower8();
+        break;
+    case 6:
+        cycles += MEMORY_ACCESS_CYCLES;
+        value = bus.read8(this->registerHL.get16());
+        break;
+    case 7:
+        value = this->registerA;
+        break;
+    default:
+        return 255;
+    }
+
+    switch(this->currentDecodedInstruction.y) {
+    case 0:
+        this->registerBC.setUpper8(value);
+        break;
+    case 1:
+        this->registerBC.setLower8(value);
+        break;
+    case 2:
+        this->registerDE.setUpper8(value);
+        break;
+    case 3:
+        this->registerDE.setLower8(value);
+        break;
+    case 4:
+        this->registerHL.setUpper8(value);
+        break;
+    case 5:
+        this->registerHL.setLower8(value);
+        break;
+    case 6:
+        cycles += MEMORY_ACCESS_CYCLES;
+        bus.write8(this->registerHL.get16(), value);
+        break;
+    case 7:
+        this->registerA = value;
+        break;
+    default:
+        return 255;
+    }
+
+    return cycles;
+}
+
 };

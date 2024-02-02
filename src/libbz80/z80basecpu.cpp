@@ -114,6 +114,13 @@ uint8_t Z80BaseCpu::execute() {
         }
         break;
     }
+    case 1: {
+        if(this->currentDecodedInstruction.z == 6
+            && this->currentDecodedInstruction.y == 6) {
+            assert(false && "Cannot HALT the cpu, yet.");
+        }
+        return this->ld_r_r(bus);
+    }
     case 2: {
         switch(this->currentDecodedInstruction.y) {
         case 0:
