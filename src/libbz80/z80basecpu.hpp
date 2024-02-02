@@ -22,6 +22,26 @@ class Bz80BaseCpuInstructionsTest;
 
 namespace bz80 {
 
+class UnimplementedInstructionException : public std::runtime_error {
+public:
+    UnimplementedInstructionException()
+        : std::runtime_error("") {
+        this->message = "Instruction not implemented (unknown instruction)";
+    }
+    UnimplementedInstructionException(const std::string& instrName)
+        : std::runtime_error(instrName) {
+        this->message
+            = std::string("Instruction not implemented: ") + instrName;
+    }
+
+    const char* what() noexcept {
+        return message.c_str();
+    }
+
+private:
+    std::string message;
+};
+
 struct FlagRegister {
     bool carry : 1;
     bool add_sub : 1;

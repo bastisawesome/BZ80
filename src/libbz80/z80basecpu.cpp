@@ -1,30 +1,13 @@
 #include "z80basecpu.hpp"
 
-#include <cassert>
-
 namespace bz80 {
 
-Z80BaseCpu::Z80BaseCpu(const MmioDeviceManager& bus)
-    : registerA(0)
-    , registerBC(0)
-    , registerDE(0)
-    , registerHL(0)
-    , registerF({ 0 })
-    , registerA_alt(0)
-    , registerBC_alt(0)
-    , registerDE_alt(0)
-    , registerHL_alt(0)
-    , registerF_alt({ 0 })
-    , programCounter(0)
-    , stackPointer(0)
-    , indexX(0)
-    , indexY(0)
-    , interruptVector(0)
-    , memoryRefresh(0)
-    , isHalted(false)
-    , state(CpuState::FETCH)
-    , currentOpcode(0)
-    , bus(bus) { }
+Z80BaseCpu::Z80BaseCpu(const MmioDeviceManager& bus) :
+    registerA(0), registerBC(0), registerDE(0), registerHL(0), registerF({ 0 }),
+    registerA_alt(0), registerBC_alt(0), registerDE_alt(0), registerHL_alt(0),
+    registerF_alt({ 0 }), programCounter(0), stackPointer(0), indexX(0),
+    indexY(0), interruptVector(0), memoryRefresh(0), isHalted(false),
+    state(CpuState::FETCH), currentOpcode(0), bus(bus) { }
 
 uint8_t Z80BaseCpu::tick() {
     uint8_t cycles;
@@ -93,7 +76,8 @@ uint8_t Z80BaseCpu::execute() {
                 if(4 <= decodedInst.y && decodedInst.y <= 7) {
                     return this->jr_cc_imm(bus);
                 }
-                assert(false && "Cannot handle this instruction yet.");
+                throw UnimplementedInstructionException(
+                    std::string("EX AF,AF'"));
             }
         }
         case 4: {
@@ -110,14 +94,14 @@ uint8_t Z80BaseCpu::execute() {
         }
 
         default:
-            assert(false && "Cannot handle this instruction yet.");
+            throw UnimplementedInstructionException();
         }
         break;
     }
     case 1: {
         if(this->currentDecodedInstruction.z == 6
             && this->currentDecodedInstruction.y == 6) {
-            assert(false && "Cannot HALT the cpu, yet.");
+            throw UnimplementedInstructionException("HALT");
         }
         return this->ld_r_r(bus);
     }
@@ -128,11 +112,11 @@ uint8_t Z80BaseCpu::execute() {
         case 2:
             return this->sub_r(bus);
         default:
-            assert(false && "Cannot handle this instruction yet.");
+            throw UnimplementedInstructionException("ALU instruction...");
         }
     }
     default:
-        assert(false && "Cannot handle this instruction yet.");
+        throw UnimplementedInstructionException();
     }
 
     return cycles;

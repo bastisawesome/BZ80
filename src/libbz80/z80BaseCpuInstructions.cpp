@@ -3,6 +3,8 @@
 #include <cmath>
 #include <cstdint>
 
+// TODO: Consistently return UINT8_MAX instead of 255.
+
 namespace bz80 {
 
 bool calcFlagH(uint8_t origValue, uint8_t toAdd, bool isSub = false) {
