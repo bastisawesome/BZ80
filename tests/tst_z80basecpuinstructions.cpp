@@ -1,7 +1,7 @@
-#include "qtestcase.h"
+// #include "qtestcase.h"
 #include <QTest>
 #include <ctime>
-#include <random>
+#include <memory>
 
 #include <mmioDeviceManager.hpp>
 #include <mmioRam.hpp>
@@ -39,7 +39,7 @@ public:
     ~Bz80BaseCpuInstructionsTest();
 
 private:
-    Z80BaseCpu* cpu;
+    std::unique_ptr<Z80BaseCpu> cpu;
     MmioDeviceManager bus;
 
 private slots:
@@ -113,23 +113,22 @@ private slots:
 
 Bz80BaseCpuInstructionsTest::Bz80BaseCpuInstructionsTest() {
     this->bus = MmioDeviceManager();
-    this->cpu = new Z80BaseCpu(bus);
-}
-
-Bz80BaseCpuInstructionsTest::~Bz80BaseCpuInstructionsTest() {
-    delete this->cpu;
-}
-
-void Bz80BaseCpuInstructionsTest::init() {
     std::unique_ptr<MmioRam<16>> ram(new MmioRam<16>());
     ram->write8(0, 15);
     this->bus.addDevice(0, std::move(ram));
+    this->cpu.reset(new Z80BaseCpu(bus));
 }
 
-void Bz80BaseCpuInstructionsTest::cleanup() {
-    delete this->cpu;
+Bz80BaseCpuInstructionsTest::~Bz80BaseCpuInstructionsTest() {
+}
 
-    this->cpu = new Z80BaseCpu(bus);
+void Bz80BaseCpuInstructionsTest::init() {}
+
+void Bz80BaseCpuInstructionsTest::cleanup() {
+    this->bus.write8(0, 15);
+    for(uint16_t i=1; i<16; i++) {
+        this->bus.write8(i, 0);
+    }
 }
 
 void Bz80BaseCpuInstructionsTest::test_ld_r_imm_data() {
@@ -1138,7 +1137,7 @@ void Bz80BaseCpuInstructionsTest::test_ld_r_addr_hl_data() {
         << FlagRegister { true, true, true, false, true, false, true, true };
 
     QTest::newRow("ld c, (hl)")
-        << (uint8_t)0x4e << &this->cpu->registerBC << true << (uint16_t)0x10
+        << (uint8_t)0x4e << &this->cpu->registerBC << true << (uint16_t)0xF
         << (uint8_t)0x9a
         << FlagRegister { true, true, false, false, true, false, false, true };
 
@@ -1148,7 +1147,7 @@ void Bz80BaseCpuInstructionsTest::test_ld_r_addr_hl_data() {
         << FlagRegister { true, true, false, true, false, false, true };
 
     QTest::newRow("ld e, (hl)")
-        << (uint8_t)0x5e << &this->cpu->registerDE << true << (uint16_t)0x10
+        << (uint8_t)0x5e << &this->cpu->registerDE << true << (uint16_t)0xF
         << (uint8_t)0x68
         << FlagRegister { false, true, true, false, false, false, true, true };
 
@@ -1259,7 +1258,7 @@ void Bz80BaseCpuInstructionsTest::test_ld_addr_hl_r_data() {
                                 << false << (uint16_t)0xd << (uint8_t)0xe3;
 
     QTest::addRow("ld (hl), c") << (uint8_t)0x71 << &this->cpu->registerBC
-                                << true << (uint16_t)0x10 << (uint8_t)0xad;
+                                << true << (uint16_t)0xF << (uint8_t)0xad;
 
     QTest::addRow("ld (hl), d") << (uint8_t)0x72 << &this->cpu->registerDE
                                 << false << (uint16_t)0xa << (uint8_t)0x1f;
