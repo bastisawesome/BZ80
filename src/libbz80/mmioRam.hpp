@@ -12,13 +12,13 @@ namespace bz80 {
 template <uint8_t N>
 class MmioRam : public MmioDevice {
 private:
-    std::array<uint8_t, N> data;
+    std::array<uint16_t, N> data;
 
     friend class ::MmioRamTest;
 
 public:
     MmioRam()
-        : data(std::array<uint8_t, N> { 0 }) { }
+        : data(std::array<uint16_t, N> { 0 }) { }
 
     /**
      * @brief read8 Returns value stored in memory at `addr`.
