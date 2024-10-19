@@ -10,6 +10,23 @@
 using bz80::MmioDevice;
 using bz80::MmioDeviceManager;
 using bz80::MmioRam;
+using bz80::PortOccupiedException;
+
+class MockPortDevice : public MmioDevice {
+public:
+    uint8_t data;
+
+    MockPortDevice(): data(0) {}
+
+    uint8_t read8(const uint16_t addr) const override {
+        return this->data;
+    }
+
+    void write8(const uint16_t addr, const uint8_t value) override {
+        this->data = value;
+    }
+
+};
 
 class MmioDeviceManagerTest : public QObject {
     Q_OBJECT
@@ -30,14 +47,22 @@ private slots:
     void test_get_nearest_device_one_device();
     void test_get_nearest_device_no_devices();
     void test_read8();
-    void test_read8_no_devices();
+    void test_read8Port();
+    void test_read8Port_no_devices();
+    void test_read8Mmio();
+    void test_read8Mmio_no_devices();
     void test_read16();
     void test_read16_no_devices();
     void test_write8();
-    void test_write8_no_devices();
+    void test_write8Mmio();
+    void test_write8Mmio_no_devices();
+    void test_write8Port();
+    void test_write8Port_no_devices();
     void test_write16();
     void test_write16_no_devices();
-    void test_add_device();
+    void test_addMmioDevice();
+    void test_addPortDevice();
+    void test_addPortDevice_occupied();
 };
 
 MmioDeviceManagerTest::MmioDeviceManagerTest() { }
@@ -51,7 +76,15 @@ void MmioDeviceManagerTest::init() {
     ram->write8(0, 42);
     ram->write8(1, 69);
 
-    this->deviceManager->addDevice(0, std::move(ram));
+    this->deviceManager->addMmioDevice(0, std::move(ram));
+
+    std::unique_ptr<MockPortDevice> portDevice(new MockPortDevice());
+    portDevice->data = 10;
+    this->deviceManager->portDevices[0] = std::move(portDevice);
+
+    std::unique_ptr<MockPortDevice> portDevice2(new MockPortDevice());
+    portDevice2->data = 74;
+    this->deviceManager->portDevices[2] = std::move(portDevice2);
 }
 
 void MmioDeviceManagerTest::cleanup() {
@@ -96,14 +129,14 @@ void MmioDeviceManagerTest::test_get_nearest_device_no_devices() {
     QCOMPARE(device, this->deviceManager->devices.end());
 }
 
-void MmioDeviceManagerTest::test_read8() {
-    QCOMPARE(this->deviceManager->read8(0), 42);
-    QCOMPARE(this->deviceManager->read8(1), 69);
+void MmioDeviceManagerTest::test_read8Mmio() {
+    QCOMPARE(this->deviceManager->read8Mmio(0), 42);
+    QCOMPARE(this->deviceManager->read8Mmio(1), 69);
 }
 
-void MmioDeviceManagerTest::test_read8_no_devices() {
+void MmioDeviceManagerTest::test_read8Mmio_no_devices() {
     this->deviceManager->devices.erase(0);
-    this->deviceManager->read8(0);
+    this->deviceManager->read8Mmio(0);
 }
 
 void MmioDeviceManagerTest::test_read16() {
@@ -116,18 +149,18 @@ void MmioDeviceManagerTest::test_read16_no_devices() {
     this->deviceManager->read16(0);
 }
 
-void MmioDeviceManagerTest::test_write8() {
+void MmioDeviceManagerTest::test_write8Mmio() {
     this->deviceManager->devices[0x8000] = std::make_unique<MmioRam<15>>();
-    this->deviceManager->write8(3, 0xad);
-    this->deviceManager->write8(0x8000, 0xbe);
+    this->deviceManager->write8Mmio(3, 0xad);
+    this->deviceManager->write8Mmio(0x8000, 0xbe);
 
     QCOMPARE(this->deviceManager->devices[0]->read8(3), 0xad);
     QCOMPARE(this->deviceManager->devices[0x8000]->read8(0), 0xbe);
 }
 
-void MmioDeviceManagerTest::test_write8_no_devices() {
+void MmioDeviceManagerTest::test_write8Mmio_no_devices() {
     this->deviceManager->devices.erase(0);
-    this->deviceManager->write8(0, 1);
+    this->deviceManager->write8Mmio(0, 1);
 }
 
 void MmioDeviceManagerTest::test_write16() {
@@ -146,14 +179,98 @@ void MmioDeviceManagerTest::test_write16_no_devices() {
     this->deviceManager->write16(0, 1);
 }
 
-void MmioDeviceManagerTest::test_add_device() {
+void MmioDeviceManagerTest::test_addMmioDevice() {
     auto newDevice = std::make_unique<MmioRam<15>>();
     newDevice->write8(0, 0xef);
     newDevice->write8(1, 0xbe);
-    this->deviceManager->addDevice(0x16, std::move(newDevice));
+    this->deviceManager->addMmioDevice(0x16, std::move(newDevice));
 
     QVERIFY(this->deviceManager->devices[0x16]);
     QCOMPARE(this->deviceManager->read16(0x16), 0xbeef);
+}
+
+void MmioDeviceManagerTest::test_read8() {
+    uint8_t data;
+
+    // Test memory-mapped device lookup.
+    data = this->deviceManager->read8(0, false);
+    QCOMPARE(data, 42);
+    data = this->deviceManager->read8(1, false);
+    QCOMPARE(data, 69);
+
+    // Test port-mapped device lookup.
+    data = this->deviceManager->read8(0, true);
+    QCOMPARE(data, 10);
+
+    std::unique_ptr<MockPortDevice> newDevice(new MockPortDevice());
+    newDevice->data = 65;
+    this->deviceManager->portDevices[1] = std::move(newDevice);
+
+    data = this->deviceManager->read8(1, true);
+    QCOMPARE(data, 65);
+}
+
+void MmioDeviceManagerTest::test_read8Port() {
+    QCOMPARE(this->deviceManager->read8Port(0), 10);
+    QCOMPARE(this->deviceManager->read8Port(2), 74);
+}
+
+void MmioDeviceManagerTest::test_read8Port_no_devices() {
+    QCOMPARE(this->deviceManager->read8Port(1), 0);
+}
+
+void MmioDeviceManagerTest::test_write8() {
+    this->deviceManager->write8(3, 100, false);
+    QCOMPARE(this->deviceManager->devices[0]->read8(3), 100);
+
+    this->deviceManager->write8(0, 254, true);
+    MockPortDevice* device = (MockPortDevice*)this->deviceManager->portDevices[0].get();
+    QCOMPARE(device->data, 254);
+}
+
+void MmioDeviceManagerTest::test_write8Port() {
+    this->deviceManager->write8Port(0, 200);
+    QCOMPARE(((MockPortDevice*)this->deviceManager->portDevices[0].get())->data, 200);
+
+    this->deviceManager->write8Port(2, 92);
+    QCOMPARE(((MockPortDevice*)this->deviceManager->portDevices[2].get())->data, 92);
+}
+
+void MmioDeviceManagerTest::test_write8Port_no_devices() {
+    this->deviceManager->write8Port(1, 39);
+    this->deviceManager->write8Port(243, 184);
+
+    QCOMPARE(((MockPortDevice*)this->deviceManager->portDevices[0].get())->data, 10);
+    QCOMPARE(((MockPortDevice*)this->deviceManager->portDevices[2].get())->data, 74);
+}
+
+void MmioDeviceManagerTest::test_addPortDevice() {
+    std::unique_ptr<MockPortDevice> portDevice(new MockPortDevice);
+    portDevice->data = 29;
+    this->deviceManager->addPortDevice(1, std::move(portDevice));
+
+    QVERIFY(this->deviceManager->portDevices[1] != nullptr);
+    QCOMPARE(((MockPortDevice*)this->deviceManager->portDevices[1].get())->data, 29);
+}
+
+void MmioDeviceManagerTest::test_addPortDevice_occupied() {
+    std::unique_ptr<MockPortDevice> portDevice(new MockPortDevice());
+    QVERIFY_THROWS_EXCEPTION(PortOccupiedException,
+        this->deviceManager->addPortDevice(0, std::move(portDevice)));
+
+    portDevice.reset(new MockPortDevice());
+    QVERIFY_THROWS_EXCEPTION(PortOccupiedException,
+        this->deviceManager->addPortDevice(2, std::move(portDevice)));
+
+    // Finally, ensure there isn't something silly going on. Let's add the
+    // device to a known-good port, then add it again!
+    portDevice.reset(new MockPortDevice());
+    QVERIFY_THROWS_NO_EXCEPTION(this->deviceManager->addPortDevice(200,
+        std::move(portDevice)));
+    portDevice.reset(new MockPortDevice());
+    QVERIFY_THROWS_EXCEPTION(PortOccupiedException,
+        this->deviceManager->addPortDevice(200, std::move(portDevice)));
+
 }
 
 QTEST_APPLESS_MAIN(MmioDeviceManagerTest)

@@ -115,7 +115,7 @@ Bz80BaseCpuInstructionsTest::Bz80BaseCpuInstructionsTest() {
     this->bus = MmioDeviceManager();
     std::unique_ptr<MmioRam<16>> ram(new MmioRam<16>());
     ram->write8(0, 15);
-    this->bus.addDevice(0, std::move(ram));
+    this->bus.addMmioDevice(0, std::move(ram));
     this->cpu.reset(new Z80BaseCpu(bus));
 }
 
@@ -125,9 +125,9 @@ Bz80BaseCpuInstructionsTest::~Bz80BaseCpuInstructionsTest() {
 void Bz80BaseCpuInstructionsTest::init() {}
 
 void Bz80BaseCpuInstructionsTest::cleanup() {
-    this->bus.write8(0, 15);
+    this->bus.write8(0, 15, false);
     for(uint16_t i=1; i<16; i++) {
-        this->bus.write8(i, 0);
+        this->bus.write8(i, 0, false);
     }
 }
 
@@ -179,7 +179,7 @@ void Bz80BaseCpuInstructionsTest::test_ld_r_imm() {
     QFETCH(FlagRegister, startingFlags);
     QFETCH(uint8_t, expectedCycles);
 
-    this->cpu->bus.write8(this->cpu->programCounter, immediate);
+    this->cpu->bus.write8(this->cpu->programCounter, immediate, false);
 
     this->cpu->currentOpcode = opcode;
     this->cpu->state = Z80BaseCpu::CpuState::DECODE;
@@ -203,7 +203,7 @@ void Bz80BaseCpuInstructionsTest::test_ld_addr_hl_imm() {
         false };
     uint8_t expectedCycles = MEMORY_ACCESS_CYCLES * 2;
 
-    this->cpu->bus.write8(this->cpu->programCounter, immediate);
+    this->cpu->bus.write8(this->cpu->programCounter, immediate, false);
 
     this->cpu->currentOpcode = opcode;
     this->cpu->state = Z80BaseCpu::CpuState::DECODE;
@@ -212,7 +212,7 @@ void Bz80BaseCpuInstructionsTest::test_ld_addr_hl_imm() {
     this->cpu->registerHL.set16(15);
     uint8_t foundCycles = this->cpu->tick();
 
-    QCOMPARE(this->bus.read8(15), immediate);
+    QCOMPARE(this->bus.read8(15, false), immediate);
     auto foundFlags = this->cpu->registerF;
     QCOMPARE(foundFlags, startingFlags);
     QCOMPARE(foundCycles, expectedCycles);
@@ -225,7 +225,7 @@ void Bz80BaseCpuInstructionsTest::test_ld_a_imm() {
         false, true };
     uint8_t expectedCycles = MEMORY_ACCESS_CYCLES;
 
-    this->cpu->bus.write8(this->cpu->programCounter, immediate);
+    this->cpu->bus.write8(this->cpu->programCounter, immediate, false);
     this->cpu->currentOpcode = opcode;
     this->cpu->state = Z80BaseCpu::CpuState::DECODE;
     this->cpu->tick();
@@ -311,7 +311,7 @@ void Bz80BaseCpuInstructionsTest::test_inc_addr_hl() {
     uint8_t expectedCycles = MEMORY_ACCESS_CYCLES;
     uint8_t startingValue = 96;
 
-    this->bus.write8(15, startingValue);
+    this->bus.write8(15, startingValue, false);
     this->cpu->currentOpcode = 0x34;
     this->cpu->registerHL = 15;
     this->cpu->state = Z80BaseCpu::CpuState::DECODE;
@@ -320,7 +320,7 @@ void Bz80BaseCpuInstructionsTest::test_inc_addr_hl() {
     this->cpu->tick();
     uint8_t foundCycles = this->cpu->tick();
 
-    QCOMPARE(this->bus.read8(15), static_cast<uint8_t>(startingValue + 1));
+    QCOMPARE(this->bus.read8(15, false), static_cast<uint8_t>(startingValue + 1));
     QCOMPARE(foundCycles, expectedCycles);
     QCOMPARE(this->cpu->registerF, expectedFlags);
 }
@@ -420,7 +420,7 @@ void Bz80BaseCpuInstructionsTest::test_dec_addr_hl() {
     uint8_t expectedCycles = MEMORY_ACCESS_CYCLES;
     uint8_t startingValue = -67;
 
-    this->bus.write8(15, startingValue);
+    this->bus.write8(15, startingValue, false);
     this->cpu->currentOpcode = 0x35;
     this->cpu->registerHL = 15;
     this->cpu->state = Z80BaseCpu::CpuState::DECODE;
@@ -429,7 +429,7 @@ void Bz80BaseCpuInstructionsTest::test_dec_addr_hl() {
     this->cpu->tick();
     uint8_t foundCycles = this->cpu->tick();
 
-    QCOMPARE(this->bus.read8(15), static_cast<uint8_t>(startingValue - 1));
+    QCOMPARE(this->bus.read8(15, false), static_cast<uint8_t>(startingValue - 1));
     QCOMPARE(foundCycles, expectedCycles);
     QCOMPARE(this->cpu->registerF, expectedFlags);
 }
@@ -491,7 +491,7 @@ void Bz80BaseCpuInstructionsTest::test_djnz_not_zero() {
     uint8_t expOffset = 5;
     uint8_t expCycles = 9;
 
-    this->cpu->bus.write8(1, expOffset);
+    this->cpu->bus.write8(1, expOffset, false);
 
     this->cpu->registerBC.setUpper8(15);
     this->cpu->registerF = expFlags;
@@ -531,7 +531,7 @@ void Bz80BaseCpuInstructionsTest::test_jr() {
         = FlagRegister { true, false, true, false, false, false, false, true };
     uint8_t expCycles = 8;
 
-    this->bus.write8(11, 3);
+    this->bus.write8(11, 3, false);
 
     this->cpu->programCounter = 11;
     this->cpu->registerF = expFlags;
@@ -607,7 +607,7 @@ void Bz80BaseCpuInstructionsTest::test_jr_cc_imm() {
     QFETCH(uint8_t, expCycles);
     QFETCH(uint16_t, startingPC);
 
-    this->bus.write8(startingPC, offset);
+    this->bus.write8(startingPC, offset, false);
 
     this->cpu->currentOpcode = opcode;
     this->cpu->registerF = startingFlags;
@@ -738,7 +738,7 @@ void Bz80BaseCpuInstructionsTest::test_add_r() {
 }
 
 void Bz80BaseCpuInstructionsTest::test_add_addr_hl() {
-    this->bus.write8(3, 107);
+    this->bus.write8(3, 107, false);
 
     const int8_t expectedValue = 121;
     const uint8_t expectedCycles = MEMORY_ACCESS_CYCLES;
@@ -909,7 +909,7 @@ void Bz80BaseCpuInstructionsTest::test_sub_addr_hl() {
         .zero = false,
         .sign = false };
 
-    this->bus.write8(3, toSub);
+    this->bus.write8(3, toSub, false);
     this->cpu->registerHL.set16(3);
     this->cpu->registerA = startingAValue;
     this->cpu->currentOpcode = 0x96;
@@ -1173,7 +1173,7 @@ void Bz80BaseCpuInstructionsTest::test_ld_r_addr_hl() {
 
     const uint8_t expCycles = MEMORY_ACCESS_CYCLES;
 
-    this->cpu->bus.write8(startingAddress, startingValue);
+    this->cpu->bus.write8(startingAddress, startingValue, false);
     this->cpu->registerHL.set16(startingAddress);
     this->cpu->registerF = startingFlags;
     this->cpu->currentOpcode = opcode;
@@ -1297,7 +1297,7 @@ void Bz80BaseCpuInstructionsTest::test_ld_addr_hl_r() {
     this->cpu->tick();
     uint8_t cycles = this->cpu->tick();
 
-    QCOMPARE(this->cpu->bus.read8(address), startingValue);
+    QCOMPARE(this->cpu->bus.read8(address, false), startingValue);
     QCOMPARE(this->cpu->registerF, expFlags);
     QCOMPARE(cycles, expCycles);
 }
@@ -1317,7 +1317,7 @@ void Bz80BaseCpuInstructionsTest::test_ld_addr_hl_a() {
     this->cpu->tick();
     uint8_t cycles = this->cpu->tick();
 
-    QCOMPARE(this->cpu->bus.read8(startingAddress), startingValue);
+    QCOMPARE(this->cpu->bus.read8(startingAddress, false), startingValue);
     QCOMPARE(this->cpu->registerF, startingFlags);
     QCOMPARE(cycles, expCycles);
 }
@@ -1375,7 +1375,7 @@ void Bz80BaseCpuInstructionsTest::test_ld_a_addr_hl() {
     const uint8_t expCycles = MEMORY_ACCESS_CYCLES;
     const FlagRegister expFlags = genRandomFlags();
 
-    this->bus.write8(address, startingValue);
+    this->bus.write8(address, startingValue, false);
     this->cpu->registerHL.set16(address);
     this->cpu->registerF = expFlags;
     this->cpu->currentOpcode = opcode;

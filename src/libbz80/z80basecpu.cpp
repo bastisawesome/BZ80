@@ -35,7 +35,7 @@ uint8_t Z80BaseCpu::tick() {
 }
 
 void Z80BaseCpu::fetch() {
-    this->currentOpcode = this->bus.read8(this->programCounter++);
+    this->currentOpcode = this->bus.read8(this->programCounter++, false);
 }
 
 void Z80BaseCpu::decode() {

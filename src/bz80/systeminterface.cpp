@@ -19,7 +19,7 @@ SystemInterface::SystemInterface(std::unique_ptr<Z80BaseCpu> cpu)
 
 void SystemInterface::addMmioDevice(
     uint16_t const addr, std::unique_ptr<MmioDevice> device) const {
-    this->mmioManager->addDevice(addr, std::move(device));
+    this->mmioManager->addMmioDevice(addr, std::move(device));
 }
 
 void SystemInterface::run() { }

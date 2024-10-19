@@ -17,7 +17,7 @@ bool calcFlagH(uint8_t origValue, uint8_t toAdd, bool isSub = false) {
 
 uint8_t Z80BaseCpu::ld_r_imm(const MmioDeviceManager& bus) {
     uint8_t cycles = MEMORY_ACCESS_CYCLES;
-    uint8_t value = bus.read8(this->programCounter++);
+    uint8_t value = bus.read8(this->programCounter++, false);
     switch(this->currentDecodedInstruction.y) {
     case 0:
         this->registerBC.setUpper8(value);
@@ -38,7 +38,7 @@ uint8_t Z80BaseCpu::ld_r_imm(const MmioDeviceManager& bus) {
         this->registerHL.setLower8(value);
         return cycles;
     case 6:
-        bus.write8(this->registerHL.get16(), value);
+        bus.write8(this->registerHL.get16(), value, false);
         return cycles + MEMORY_ACCESS_CYCLES;
     case 7:
         this->registerA = value;
@@ -79,8 +79,8 @@ uint8_t Z80BaseCpu::inc_r(const MmioDeviceManager& bus) {
         break;
     case 6:
         cycles += MEMORY_ACCESS_CYCLES;
-        preIncValue = bus.read8(this->registerHL.get16());
-        bus.write8(this->registerHL.get16(), preIncValue + 1);
+        preIncValue = bus.read8(this->registerHL.get16(), false);
+        bus.write8(this->registerHL.get16(), preIncValue + 1, false);
         break;
     case 7:
         preIncValue = this->registerA;
@@ -131,8 +131,8 @@ uint8_t Z80BaseCpu::dec_r(const MmioDeviceManager& bus) {
         break;
     case 6:
         cycles += MEMORY_ACCESS_CYCLES;
-        preDecValue = this->bus.read8(this->registerHL.get16());
-        this->bus.write8(this->registerHL.get16(), preDecValue - 1);
+        preDecValue = this->bus.read8(this->registerHL.get16(), false);
+        this->bus.write8(this->registerHL.get16(), preDecValue - 1, false);
         break;
     case 7:
         preDecValue = this->registerA--;
@@ -162,7 +162,7 @@ uint8_t Z80BaseCpu::djnz(const MmioDeviceManager& bus) {
     this->registerBC.addUpper8(-1);
     cycles += INC_DEC_REG_CYCLES;
 
-    int8_t jumpAmt = bus.read8(this->programCounter++);
+    int8_t jumpAmt = bus.read8(this->programCounter++, false);
 
     if(this->registerBC.getUpper8() != 0) {
         this->programCounter += jumpAmt;
@@ -181,7 +181,7 @@ uint8_t Z80BaseCpu::djnz(const MmioDeviceManager& bus) {
 uint8_t Z80BaseCpu::jr_imm(const MmioDeviceManager& bus) {
     uint8_t cycles = 0;
 
-    int8_t jumpAmt = this->bus.read8(this->programCounter++);
+    int8_t jumpAmt = this->bus.read8(this->programCounter++, false);
     cycles += MEMORY_ACCESS_CYCLES;
     this->programCounter += jumpAmt;
     cycles += 5; // TODO: Figure out why this is 5?
@@ -221,7 +221,7 @@ uint8_t Z80BaseCpu::jr_cc_imm(const MmioDeviceManager& bus) {
     }
 
     if(willJump) {
-        int8_t value = bus.read8(this->programCounter++);
+        int8_t value = bus.read8(this->programCounter++, false);
         this->programCounter += value;
         cycles += MEMORY_ACCESS_CYCLES;
         cycles += INC_DEC_REG_CYCLES;
@@ -258,7 +258,7 @@ uint8_t Z80BaseCpu::add_a_r(const MmioDeviceManager& bus) {
         value = this->registerHL.getLower8();
         break;
     case 6:
-        value = bus.read8(this->registerHL.get16());
+        value = bus.read8(this->registerHL.get16(), false);
         cycles += MEMORY_ACCESS_CYCLES;
         break;
     case 7:
@@ -315,7 +315,7 @@ uint8_t Z80BaseCpu::sub_r(const MmioDeviceManager& bus) {
         value = this->registerHL.getLower8();
         break;
     case 6:
-        value = bus.read8(this->registerHL.get16());
+        value = bus.read8(this->registerHL.get16(), false);
         cycles += MEMORY_ACCESS_CYCLES;
         break;
     case 7:
@@ -372,7 +372,7 @@ uint8_t Z80BaseCpu::ld_r_r(const MmioDeviceManager& bus) {
         break;
     case 6:
         cycles += MEMORY_ACCESS_CYCLES;
-        value = bus.read8(this->registerHL.get16());
+        value = bus.read8(this->registerHL.get16(), false);
         break;
     case 7:
         value = this->registerA;
@@ -402,7 +402,7 @@ uint8_t Z80BaseCpu::ld_r_r(const MmioDeviceManager& bus) {
         break;
     case 6:
         cycles += MEMORY_ACCESS_CYCLES;
-        bus.write8(this->registerHL.get16(), value);
+        bus.write8(this->registerHL.get16(), value, false);
         break;
     case 7:
         this->registerA = value;
