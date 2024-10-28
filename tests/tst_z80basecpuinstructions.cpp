@@ -14,10 +14,6 @@ using bz80::MmioRam;
 using bz80::RegisterPairType;
 using bz80::Z80BaseCpu;
 
-/**
- * TODO: Merge INC r and DEC r instruction tests, they are identical-ish.
- */
-
 FlagRegister genRandomFlags() {
     srand(time(0));
     uint8_t rand = (uint8_t)random();
@@ -91,11 +87,6 @@ private slots:
     void test_sub_a();
 
     // LD r, r
-    // TODO: Remove flag register from the test data.
-    //  The flag register could be seeded with random data, as it is expected
-    //  to always contain the same data at the start as it does at the end.
-    //  Randomness _should_, in theory, provide enough proof that the flags
-    //  are unaltered.
     void test_ld_r_r_data();
     void test_ld_r_r();
     void test_ld_r_addr_hl_data();
