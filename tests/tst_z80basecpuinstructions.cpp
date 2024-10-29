@@ -687,7 +687,7 @@ void Bz80BaseCpuInstructionsTest::test_add_r_data() {
     QTest::addRow("ADD A, E")
         << (uint8_t)0x83 << (int8_t)-12 << &this->cpu->registerDE << false
         << (int8_t)-100
-        << FlagRegister { .carry = false,
+        << FlagRegister { .carry = true,
                .add_sub = false,
                .overflow = false,
                .unused1 = false,
@@ -699,7 +699,7 @@ void Bz80BaseCpuInstructionsTest::test_add_r_data() {
     QTest::addRow("ADD A, H")
         << (uint8_t)0x84 << (int8_t)-113 << &this->cpu->registerHL << true
         << (int8_t)-68
-        << FlagRegister { .carry = false,
+        << FlagRegister { .carry = true,
                .add_sub = false,
                .overflow = true,
                .unused1 = false,
@@ -711,7 +711,7 @@ void Bz80BaseCpuInstructionsTest::test_add_r_data() {
     QTest::addRow("ADD A, L")
         << (uint8_t)0x85 << (int8_t)26 << &this->cpu->registerHL << false
         << (int8_t)-51
-        << FlagRegister { .carry = false,
+        << FlagRegister { .carry = true,
                .add_sub = false,
                .overflow = false,
                .unused1 = false,
@@ -719,6 +719,19 @@ void Bz80BaseCpuInstructionsTest::test_add_r_data() {
                .unused2 = false,
                .zero = false,
                .sign = true };
+
+    QTest::addRow("ADD A, B (overflow)")
+        << (uint8_t)0x80 << (int8_t)127 << &this->cpu->registerBC << true
+        << (int8_t)-200
+        << FlagRegister { .carry=false,
+                .add_sub = false,
+                .overflow = true,
+                .unused1 = false,
+                .halfcarry = true,
+                .unused2 = false,
+                .zero = false,
+                .sign = true
+           };
 }
 
 void Bz80BaseCpuInstructionsTest::test_add_r() {
@@ -778,7 +791,7 @@ void Bz80BaseCpuInstructionsTest::test_add_addr_hl() {
 void Bz80BaseCpuInstructionsTest::test_add_a() {
     const int8_t expectedValue = (int8_t)-164;
     const uint8_t expectedCycles = 0;
-    const FlagRegister expectedFlags { .carry = false,
+    const FlagRegister expectedFlags { .carry = true,
         .add_sub = false,
         .overflow = true,
         .unused1 = false,

@@ -277,7 +277,7 @@ uint8_t Z80BaseCpu::add_a_r() {
         didOverflow = false;
     }
 
-    this->registerF.carry = ((int16_t)newValue) > 255;
+    this->registerF.carry = ((uint16_t)newValue) > 255;
     this->registerF.add_sub = false;
     this->registerF.overflow = didOverflow;
     this->registerF.halfcarry = calcFlagH(this->registerA, value);
