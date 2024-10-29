@@ -69,27 +69,27 @@ uint8_t Z80BaseCpu::execute() {
             case 0:
                 return this->nop();
             case 2:
-                return this->djnz(bus);
+                return this->djnz();
             case 3:
-                return this->jr_imm(bus);
+                return this->jr_imm();
             default:
                 if(4 <= decodedInst.y && decodedInst.y <= 7) {
-                    return this->jr_cc_imm(bus);
+                    return this->jr_cc_imm();
                 }
                 throw UnimplementedInstructionException(
                     std::string("EX AF,AF'"));
             }
         }
         case 4: {
-            cycles += this->inc_r(bus);
+            cycles += this->inc_r();
             return cycles;
         }
         case 5: {
-            cycles += this->dec_r(bus);
+            cycles += this->dec_r();
             return cycles;
         }
         case 6: {
-            cycles += this->ld_r_imm(bus);
+            cycles += this->ld_r_imm();
             return cycles;
         }
 
@@ -103,14 +103,14 @@ uint8_t Z80BaseCpu::execute() {
             && this->currentDecodedInstruction.y == 6) {
             throw UnimplementedInstructionException("HALT");
         }
-        return this->ld_r_r(bus);
+        return this->ld_r_r();
     }
     case 2: {
         switch(this->currentDecodedInstruction.y) {
         case 0:
-            return this->add_a_r(bus);
+            return this->add_a_r();
         case 2:
-            return this->sub_r(bus);
+            return this->sub_r();
         default:
             throw UnimplementedInstructionException("ALU instruction...");
         }

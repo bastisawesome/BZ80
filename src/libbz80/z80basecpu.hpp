@@ -109,6 +109,7 @@ protected:
     uint16_t programCounter, stackPointer, indexX, indexY;
     uint8_t interruptVector, memoryRefresh;
 
+    // State information
     bool isHalted;
     const MmioDeviceManager& bus;
     uint8_t currentOpcode;
@@ -124,16 +125,16 @@ public:
 
     // Instructions
 protected:
-    uint8_t ld_r_imm(const MmioDeviceManager& bus);
-    uint8_t inc_r(const MmioDeviceManager& bus);
-    uint8_t dec_r(const MmioDeviceManager& bus);
+    uint8_t ld_r_imm();
+    uint8_t inc_r();
+    uint8_t dec_r();
     uint8_t nop();
-    uint8_t djnz(const MmioDeviceManager& bus);
-    uint8_t jr_imm(const MmioDeviceManager& bus);
-    uint8_t jr_cc_imm(const MmioDeviceManager& bus);
-    uint8_t add_a_r(const MmioDeviceManager& bus);
-    uint8_t sub_r(const MmioDeviceManager& bus);
-    uint8_t ld_r_r(const MmioDeviceManager& bus);
+    uint8_t djnz();
+    uint8_t jr_imm();
+    uint8_t jr_cc_imm();
+    uint8_t add_a_r();
+    uint8_t sub_r();
+    uint8_t ld_r_r();
 };
 
 } // namespace bz80
