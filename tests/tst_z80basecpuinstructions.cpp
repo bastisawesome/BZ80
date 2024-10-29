@@ -68,6 +68,7 @@ private slots:
     void test_djnz_zero();
 
     // JR IMM
+    void test_jr_data();
     void test_jr();
 
     // JR cc, IMM
@@ -517,21 +518,41 @@ void Bz80BaseCpuInstructionsTest::test_djnz_zero() {
     QCOMPARE(cycles, expCycles);
 }
 
+void Bz80BaseCpuInstructionsTest::test_jr_data() {
+    QTest::addColumn<uint16_t>("startingPc");
+    QTest::addColumn<int8_t>("immediate");
+
+    QTest::addRow("jr 3") << (uint16_t)11 << (int8_t)3;
+    QTest::addRow("jr 127") << (uint16_t)200 << (int8_t)127;
+    QTest::addRow("jr 1") << (uint16_t)14 << (int8_t)1;
+    QTest::addRow("jr -1") << (uint16_t)45 << (int8_t)-1;
+    QTest::addRow("jr -127") << (uint16_t)452 << (int8_t)-128;
+    QTest::addRow("jr -15") << (uint16_t)59010 << (int8_t)-15;
+}
+
 void Bz80BaseCpuInstructionsTest::test_jr() {
-    auto expFlags
-        = FlagRegister { true, false, true, false, false, false, false, true };
-    uint8_t expCycles = 8;
+    std::unique_ptr<MmioRam<UINT16_MAX>> rom(new MmioRam<UINT16_MAX>());
+    this->bus.addMmioDevice(0, std::move(rom));
+    const uint8_t expCycles = 8;
+    const auto expFlags = genRandomFlags();
 
-    this->bus.write8(11, 3, false);
+    QFETCH(uint16_t, startingPc);
+    QFETCH(int8_t, immediate);
 
-    this->cpu->programCounter = 11;
+    // The program counter is incremented to read from memory,
+    // then the relative offset is added.
+    uint16_t expPc = (startingPc + 1) + immediate;
+
+    this->bus.write8(startingPc, immediate, false);
+
+    this->cpu->programCounter = startingPc;
     this->cpu->registerF = expFlags;
     this->cpu->currentOpcode = 0x18;
     this->cpu->state = Z80BaseCpu::CpuState::DECODE;
     this->cpu->tick();
     uint8_t cycles = this->cpu->tick();
 
-    QCOMPARE(this->cpu->programCounter, 15);
+    QCOMPARE(this->cpu->programCounter, expPc);
     QCOMPARE(this->cpu->registerF, expFlags);
     QCOMPARE(cycles, expCycles);
 }
