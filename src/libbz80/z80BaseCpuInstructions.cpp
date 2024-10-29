@@ -3,8 +3,6 @@
 #include <cmath>
 #include <cstdint>
 
-// TODO: Consistently return UINT8_MAX instead of 255.
-
 namespace bz80 {
 
 bool calcFlagH(uint8_t origValue, uint8_t toAdd, bool isSub = false) {
@@ -184,7 +182,7 @@ uint8_t Z80BaseCpu::jr_imm() {
     int8_t jumpAmt = this->bus.read8(this->programCounter++, false);
     cycles += MEMORY_ACCESS_CYCLES;
     this->programCounter += jumpAmt;
-    cycles += 5; // TODO: Figure out why this is 5?
+    cycles += 5;
 
     return cycles;
 }

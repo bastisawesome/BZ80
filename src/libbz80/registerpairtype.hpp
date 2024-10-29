@@ -1,9 +1,5 @@
 #pragma once
 
-/*
- * TODO: Make operator overloads use functions.
- */
-
 #include <cstdint>
 
 class RegisterPairTypeTest;
