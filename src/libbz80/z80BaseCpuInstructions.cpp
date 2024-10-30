@@ -85,7 +85,7 @@ uint8_t Z80BaseCpu::inc_r() {
         this->registerA++;
         break;
     default:
-        return 255;
+        return UINT8_MAX;
     }
 
     uint8_t postIncValue = preIncValue + 1;
@@ -136,7 +136,7 @@ uint8_t Z80BaseCpu::dec_r() {
         preDecValue = this->registerA--;
         break;
     default:
-        return 255;
+        return UINT8_MAX;
     }
 
     uint8_t postDecValue = preDecValue - 1;
@@ -263,7 +263,7 @@ uint8_t Z80BaseCpu::add_a_r() {
         value = this->registerA;
         break;
     default:
-        return 255;
+        return UINT8_MAX;
     }
 
     const int16_t newValue = (int8_t)this->registerA + (int8_t)value;
@@ -320,7 +320,7 @@ uint8_t Z80BaseCpu::sub_r() {
         value = this->registerA;
         break;
     default:
-        return 255;
+        return UINT8_MAX;
     }
 
     int16_t newValue = (int8_t)this->registerA - value;
@@ -376,7 +376,7 @@ uint8_t Z80BaseCpu::ld_r_r() {
         value = this->registerA;
         break;
     default:
-        return 255;
+        return UINT8_MAX;
     }
 
     switch(this->currentDecodedInstruction.y) {
@@ -406,7 +406,7 @@ uint8_t Z80BaseCpu::ld_r_r() {
         this->registerA = value;
         break;
     default:
-        return 255;
+        return UINT8_MAX;
     }
 
     return cycles;
