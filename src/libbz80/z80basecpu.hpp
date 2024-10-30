@@ -74,6 +74,7 @@ protected:
     void setMemoryAddressAtHL(uint8_t value);
     uint8_t getRegisterA();
     uint8_t getMemoryAddressAtHl();
+    void generateDecodedInstruction();
 
 protected:
     enum class CpuState {

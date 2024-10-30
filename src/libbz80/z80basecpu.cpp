@@ -34,6 +34,18 @@ uint8_t Z80BaseCpu::tick() {
     return cycles;
 }
 
+void Z80BaseCpu::generateDecodedInstruction() {
+    struct DecodedInstruction decodedOpcode;
+
+    decodedOpcode.x = this->currentOpcode >> 6;
+    decodedOpcode.y = 0b00111 & (this->currentOpcode >> 3);
+    decodedOpcode.z = 0b00000111 & this->currentOpcode;
+    decodedOpcode.p = decodedOpcode.y >> 1;
+    decodedOpcode.q = decodedOpcode.y % 2;
+
+    this->currentDecodedInstruction = decodedOpcode;
+}
+
 void Z80BaseCpu::fetch() {
     this->currentOpcode = this->bus.read8(this->programCounter++, false);
 }
@@ -47,15 +59,7 @@ void Z80BaseCpu::decode() {
         assert(false && "Cannot handle prefixed-opcodes yet.");
     }
 
-    struct DecodedInstruction decodedOpcode;
-
-    decodedOpcode.x = this->currentOpcode >> 6;
-    decodedOpcode.y = 0b00111 & (this->currentOpcode >> 3);
-    decodedOpcode.z = 0b00000111 & this->currentOpcode;
-    decodedOpcode.p = decodedOpcode.y >> 1;
-    decodedOpcode.q = decodedOpcode.y % 2;
-
-    this->currentDecodedInstruction = decodedOpcode;
+    this->generateDecodedInstruction();
 }
 
 uint8_t Z80BaseCpu::execute() {
