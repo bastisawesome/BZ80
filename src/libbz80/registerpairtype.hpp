@@ -94,9 +94,7 @@ public:
     }
 
     RegisterPairType& operator=(const RegisterPairType& source) {
-        this->lower8Register = source.lower8Register;
-        this->upper8Register = source.upper8Register;
-        this->combinedValue = source.combinedValue;
+        this->set16(source.combinedValue);
 
         return *this;
     }
@@ -118,29 +116,25 @@ public:
     }
 
     RegisterPairType& operator+=(const uint16_t& value) {
-        this->combinedValue += value;
-        this->calculate8();
+        this->add16(value);
 
         return *this;
     }
 
     RegisterPairType& operator+=(const RegisterPairType& source) {
-        this->combinedValue += source.combinedValue;
-        this->calculate8();
+        this->add16(source.combinedValue);
 
         return *this;
     }
 
     RegisterPairType& operator-=(const uint16_t value) {
-        this->combinedValue -= value;
-        this->calculate8();
+        this->add16(-value);
 
         return *this;
     }
 
     RegisterPairType& operator-=(const RegisterPairType& source) {
-        this->combinedValue -= source.combinedValue;
-        this->calculate8();
+        this->add16(-source.combinedValue);
 
         return *this;
     }
