@@ -84,6 +84,15 @@ uint8_t Z80BaseCpu::execute() {
                     std::string("EX AF,AF'"));
             }
         }
+        case 1: {
+            switch(decodedInst.q) {
+            case 0:
+                return this->ld_rr_imm();
+            default:
+                throw UnimplementedInstructionException(
+                    std::string("ADD HL, rp[p]"));
+            }
+        }
         case 4: {
             cycles += this->inc_r();
             return cycles;

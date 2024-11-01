@@ -101,6 +101,11 @@ private slots:
     void test_ld_a_r();
     void test_ld_a_addr_hl();
     void test_ld_a_a();
+
+    // LD rr, nn
+    void test_ld_rr_imm_data();
+    void test_ld_rr_imm();
+    void test_ld_sp_imm();
 };
 
 Bz80BaseCpuInstructionsTest::Bz80BaseCpuInstructionsTest() {
@@ -1429,6 +1434,64 @@ void Bz80BaseCpuInstructionsTest::test_ld_a_a() {
     QCOMPARE(this->cpu->registerA, startingValue);
     QCOMPARE(this->cpu->registerF, expFlags);
     QCOMPARE(cycles, expCycles);
+}
+
+void Bz80BaseCpuInstructionsTest::test_ld_rr_imm_data() {
+    QTest::addColumn<uint8_t>("opcode");
+    QTest::addColumn<RegisterPairType*>("registerPair");
+    QTest::addColumn<uint16_t>("value");
+
+    QTest::addRow("LD BC, nn")
+        << (uint8_t)0x01 << &this->cpu->registerBC << (uint16_t)18090;
+    QTest::addRow("LD DE, nn")
+        << (uint8_t)0x11 << &this->cpu->registerDE << (uint16_t)13843;
+    QTest::addRow("LD HL, nn")
+        << (uint8_t)0x21 << &this->cpu->registerHL << (uint16_t)59284;
+}
+
+void Bz80BaseCpuInstructionsTest::test_ld_rr_imm() {
+    const uint8_t expCycles = 6;
+
+    QFETCH(uint8_t, opcode);
+    QFETCH(RegisterPairType*, registerPair);
+    QFETCH(uint16_t, value);
+
+    const uint8_t expUpper = (uint8_t)(value >> 8);
+    const uint8_t expLower = (uint8_t)(value & 0xff);
+
+    this->bus.write16(this->cpu->programCounter, value);
+
+    this->cpu->currentOpcode = opcode;
+    this->cpu->generateDecodedInstruction();
+    this->cpu->state = Z80BaseCpu::CpuState::EXECUTE;
+    uint8_t foundCycles = this->cpu->tick();
+
+    uint16_t foundValue = registerPair->get16();
+    uint8_t foundUpper = registerPair->getUpper8();
+    uint8_t foundLower = registerPair->getLower8();
+
+    QCOMPARE(foundValue, value);
+    QCOMPARE(foundUpper, expUpper);
+    QCOMPARE(foundLower, expLower);
+    QCOMPARE(foundCycles, expCycles);
+}
+
+void Bz80BaseCpuInstructionsTest::test_ld_sp_imm() {
+    const uint8_t opcode = 0x31;
+    const uint16_t value = 48593;
+    const uint8_t expCycles = 6;
+
+    this->bus.write16(this->cpu->programCounter, value);
+
+    this->cpu->currentOpcode = opcode;
+    this->cpu->generateDecodedInstruction();
+    this->cpu->state = Z80BaseCpu::CpuState::EXECUTE;
+    uint8_t foundCycles = this->cpu->tick();
+
+    uint16_t foundValue = this->cpu->stackPointer;
+
+    QCOMPARE(foundValue, value);
+    QCOMPARE(foundCycles, expCycles);
 }
 
 QTEST_APPLESS_MAIN(Bz80BaseCpuInstructionsTest)

@@ -412,4 +412,27 @@ uint8_t Z80BaseCpu::ld_r_r() {
     return cycles;
 }
 
+uint8_t Z80BaseCpu::ld_rr_imm() {
+    uint8_t cycles = MEMORY_ACCESS_CYCLES * 2;
+    uint16_t value = this->bus.read16(this->programCounter++);
+
+    switch(this->currentDecodedInstruction.p) {
+    case 0:
+        this->registerBC = value;
+        break;
+    case 1:
+        this->registerDE = value;
+        break;
+    case 2:
+        this->registerHL = value;
+        break;
+    case 3:
+        this->stackPointer = value;
+        break;
+    default:
+        return UINT8_MAX;
+    }
+
+    return cycles;
+}
 };
