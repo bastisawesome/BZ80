@@ -72,6 +72,8 @@ uint8_t Z80BaseCpu::execute() {
             switch(decodedInst.y) {
             case 0:
                 return this->nop();
+            case 1:
+                return this->ex_af_afp();
             case 2:
                 return this->djnz();
             case 3:
@@ -80,8 +82,7 @@ uint8_t Z80BaseCpu::execute() {
                 if(4 <= decodedInst.y && decodedInst.y <= 7) {
                     return this->jr_cc_imm();
                 }
-                throw UnimplementedInstructionException(
-                    std::string("EX AF,AF'"));
+                throw UnimplementedInstructionException();
             }
         }
         case 1: {

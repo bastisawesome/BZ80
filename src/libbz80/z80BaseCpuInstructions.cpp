@@ -435,4 +435,19 @@ uint8_t Z80BaseCpu::ld_rr_imm() {
 
     return cycles;
 }
+
+uint8_t Z80BaseCpu::ex_af_afp() {
+    FlagRegister tmpFlag;
+    uint8_t tmpA;
+
+    tmpFlag = this->registerF;
+    tmpA = this->registerA;
+
+    this->registerA = this->registerA_alt;
+    this->registerF = this->registerF_alt;
+    this->registerA_alt = tmpA;
+    this->registerF_alt = tmpFlag;
+
+    return 0;
+}
 };

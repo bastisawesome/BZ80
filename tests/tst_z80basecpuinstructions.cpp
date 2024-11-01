@@ -106,6 +106,9 @@ private slots:
     void test_ld_rr_imm_data();
     void test_ld_rr_imm();
     void test_ld_sp_imm();
+
+    // EX AF, AF'
+    void test_ex_af_afp();
 };
 
 Bz80BaseCpuInstructionsTest::Bz80BaseCpuInstructionsTest() {
@@ -1491,6 +1494,37 @@ void Bz80BaseCpuInstructionsTest::test_ld_sp_imm() {
     uint16_t foundValue = this->cpu->stackPointer;
 
     QCOMPARE(foundValue, value);
+    QCOMPARE(foundCycles, expCycles);
+}
+
+void Bz80BaseCpuInstructionsTest::test_ex_af_afp() {
+    const uint8_t opcode = 0x08;
+    const uint8_t expCycles = 0;
+    const uint8_t startingRegA = 162;
+    const FlagRegister startingFlags = {
+        .carry = false, .add_sub=false, .overflow = false, .unused1 = false,
+        .halfcarry = false, .unused2 = false, .zero = false, .sign = false
+    };
+    const uint8_t startingRegAP = 220;
+    const FlagRegister startingFlagsP = {
+        .carry = true, .add_sub = true, .overflow = true, .unused1 = false,
+        .halfcarry = true, .unused2 = false, .zero = true, .sign = false
+    };
+
+    this->cpu->registerA = startingRegA;
+    this->cpu->registerA_alt = startingRegAP;
+    this->cpu->registerF = startingFlags;
+    this->cpu->registerF_alt = startingFlagsP;
+
+    this->cpu->currentOpcode = opcode;
+    this->cpu->generateDecodedInstruction();
+    this->cpu->state = Z80BaseCpu::CpuState::EXECUTE;
+    uint8_t foundCycles = this->cpu->tick();
+
+    QCOMPARE(this->cpu->registerA, startingRegAP);
+    QCOMPARE(this->cpu->registerA_alt, startingRegA);
+    QCOMPARE(this->cpu->registerF, startingFlagsP);
+    QCOMPARE(this->cpu->registerF_alt, startingFlags);
     QCOMPARE(foundCycles, expCycles);
 }
 
