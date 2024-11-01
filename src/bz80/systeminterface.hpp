@@ -21,5 +21,7 @@ public:
     SystemInterface(std::unique_ptr<Z80BaseCpu>);
     void addMmioDevice(
         uint16_t const addr, std::unique_ptr<MmioDevice> device) const;
+    void addPortDevice(
+        const uint8_t addr, std::unique_ptr<MmioDevice> portDevice) const;
     void run();
 };

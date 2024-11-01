@@ -122,28 +122,6 @@ private:
         devIter->second->write8(adjustedAddr, value);
     }
 
-    /**
-     * @brief addPortDevice Adds a new port-mapped device.
-     * @param addr Port number to assign to the device.
-     * @param device Device to be assigned to the port.
-     * @throws bz80::PortOccupiedException Thrown if `addr` is already in use by
-     *      another device.
-     *
-     * Adds a new `MmioDevice` as a port-mapped device, taking ownership of it.
-     * Port-mapped devices cannot overlap, each device can take up a single byte
-     * in the address space. Up to 256 devices can be mapped.
-     *
-     * Attempting to map a device to a port already in use will raise a
-     * `PortOccupiedException`.
-     */
-    void addPortDevice(uint8_t const addr, std::unique_ptr<MmioDevice> device) {
-        if(this->portDevices[addr] != nullptr) {
-            throw PortOccupiedException();
-        }
-
-        this->portDevices[addr] = std::move(device);
-    }
-
     friend class ::MmioDeviceManagerTest;
 
 public:
@@ -228,6 +206,28 @@ public:
      */
     void addMmioDevice(uint16_t const addr, std::unique_ptr<MmioDevice> device) {
         this->devices[addr] = std::move(device);
+    }
+
+    /**
+     * @brief addPortDevice Adds a new port-mapped device.
+     * @param addr Port number to assign to the device.
+     * @param device Device to be assigned to the port.
+     * @throws bz80::PortOccupiedException Thrown if `addr` is already in use by
+     *      another device.
+     *
+     * Adds a new `MmioDevice` as a port-mapped device, taking ownership of it.
+     * Port-mapped devices cannot overlap, each device can take up a single byte
+     * in the address space. Up to 256 devices can be mapped.
+     *
+     * Attempting to map a device to a port already in use will raise a
+     * `PortOccupiedException`.
+     */
+    void addPortDevice(uint8_t const addr, std::unique_ptr<MmioDevice> device) {
+        if(this->portDevices[addr] != nullptr) {
+            throw PortOccupiedException();
+        }
+
+        this->portDevices[addr] = std::move(device);
     }
 };
 

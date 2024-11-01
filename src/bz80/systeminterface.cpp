@@ -22,4 +22,9 @@ void SystemInterface::addMmioDevice(
     this->mmioManager->addMmioDevice(addr, std::move(device));
 }
 
+void SystemInterface::addPortDevice(
+    uint8_t const addr, std::unique_ptr<MmioDevice> device) const {
+    this->mmioManager->addPortDevice(addr, std::move(device));
+}
+
 void SystemInterface::run() { }
