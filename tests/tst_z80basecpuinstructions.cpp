@@ -35,10 +35,12 @@ public:
     MockPortDevice() : data(0) {}
 
     uint8_t read8(const uint16_t addr) const {
+        qInfo("MockPortDevice->read8() called.");
         return this->data;
     }
 
     void write8(const uint16_t addr, uint8_t value) {
+        qInfo("MockPortDevice->write8() called.");
         this->data = value;
     }
 };
@@ -128,6 +130,9 @@ private slots:
 
     // OUT (n), A
     void test_out_n_a();
+
+    // IN A, (n)
+    void test_in_a_n();
 };
 
 Bz80BaseCpuInstructionsTest::Bz80BaseCpuInstructionsTest() {
@@ -1549,7 +1554,7 @@ void Bz80BaseCpuInstructionsTest::test_ex_af_afp() {
 
 void Bz80BaseCpuInstructionsTest::test_out_n_a() {
     const uint8_t opcode = 0xd3;
-    const uint8_t devAddr = 0;
+    const uint8_t devAddr = 3;
     const uint8_t startingValue = 170;
     const uint8_t expCycles = 7;
 
@@ -1564,6 +1569,26 @@ void Bz80BaseCpuInstructionsTest::test_out_n_a() {
     uint8_t foundCycles = this->cpu->tick();
 
     QCOMPARE(this->bus.read8(devAddr, true), startingValue);
+    QCOMPARE(foundCycles, expCycles);
+}
+
+void Bz80BaseCpuInstructionsTest::test_in_a_n() {
+    const uint8_t opcode = 0xdb;
+    const uint8_t devAddr = 14;
+    const uint8_t startingValue = 71;
+    const uint8_t expCycles = 7;
+
+    std::unique_ptr<MockPortDevice> dev(new MockPortDevice());
+    dev->data = startingValue;
+    this->bus.addPortDevice(devAddr, std::move(dev));
+    this->bus.write8(this->cpu->programCounter, devAddr, false);
+
+    this->cpu->currentOpcode = opcode;
+    this->cpu->generateDecodedInstruction();
+    this->cpu->state = Z80BaseCpu::CpuState::EXECUTE;
+    uint8_t foundCycles = this->cpu->tick();
+
+    QCOMPARE(this->cpu->registerA, startingValue);
     QCOMPARE(foundCycles, expCycles);
 }
 

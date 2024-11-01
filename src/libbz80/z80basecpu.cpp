@@ -135,6 +135,8 @@ uint8_t Z80BaseCpu::execute() {
             switch(decodedInst.y) {
             case 2:
                 return this->out_n_a();
+            case 3:
+                return this->in_a_imm();
             default:
                 throw UnimplementedInstructionException();
             }

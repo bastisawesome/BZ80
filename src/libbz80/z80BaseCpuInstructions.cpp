@@ -453,10 +453,20 @@ uint8_t Z80BaseCpu::ex_af_afp() {
 
 uint8_t Z80BaseCpu::out_n_a() {
     uint8_t cycles = (MEMORY_ACCESS_CYCLES * 2) + 1;
-    uint16_t addr = (this->registerA << 8) &
+    uint16_t addr = (this->registerA << 8) |
         this->bus.read8(this->programCounter++, false);
 
     this->bus.write8(addr, this->registerA, true);
+
+    return cycles;
+}
+
+uint8_t Z80BaseCpu::in_a_imm() {
+    uint8_t cycles = (MEMORY_ACCESS_CYCLES * 2) + 1;
+    uint16_t addr = (this->registerA << 8) |
+        this->bus.read8(this->programCounter++, false);
+
+    this->registerA = this->bus.read8(addr, true);
 
     return cycles;
 }
