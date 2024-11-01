@@ -13,6 +13,7 @@ using bz80::MmioDeviceManager;
 using bz80::MmioRam;
 using bz80::RegisterPairType;
 using bz80::Z80BaseCpu;
+using bz80::MmioDevice;
 
 FlagRegister genRandomFlags() {
     srand(time(0));
@@ -26,6 +27,21 @@ FlagRegister genRandomFlags() {
         .zero = (bool)(rand & 0x40),
         .sign = (bool)(rand & 0x80) };
 }
+
+class MockPortDevice: public MmioDevice {
+public:
+    uint8_t data;
+
+    MockPortDevice() : data(0) {}
+
+    uint8_t read8(const uint16_t addr) const {
+        return this->data;
+    }
+
+    void write8(const uint16_t addr, uint8_t value) {
+        this->data = value;
+    }
+};
 
 class Bz80BaseCpuInstructionsTest : public QObject {
     Q_OBJECT
@@ -109,6 +125,9 @@ private slots:
 
     // EX AF, AF'
     void test_ex_af_afp();
+
+    // OUT (n), A
+    void test_out_n_a();
 };
 
 Bz80BaseCpuInstructionsTest::Bz80BaseCpuInstructionsTest() {
@@ -1525,6 +1544,26 @@ void Bz80BaseCpuInstructionsTest::test_ex_af_afp() {
     QCOMPARE(this->cpu->registerA_alt, startingRegA);
     QCOMPARE(this->cpu->registerF, startingFlagsP);
     QCOMPARE(this->cpu->registerF_alt, startingFlags);
+    QCOMPARE(foundCycles, expCycles);
+}
+
+void Bz80BaseCpuInstructionsTest::test_out_n_a() {
+    const uint8_t opcode = 0xd3;
+    const uint8_t devAddr = 0;
+    const uint8_t startingValue = 170;
+    const uint8_t expCycles = 7;
+
+    std::unique_ptr<MockPortDevice> dev(new MockPortDevice());
+    this->bus.addPortDevice(devAddr, std::move(dev));
+    this->bus.write8(this->cpu->programCounter, devAddr, false);
+
+    this->cpu->currentOpcode = opcode;
+    this->cpu->generateDecodedInstruction();
+    this->cpu->registerA = startingValue;
+    this->cpu->state = Z80BaseCpu::CpuState::EXECUTE;
+    uint8_t foundCycles = this->cpu->tick();
+
+    QCOMPARE(this->bus.read8(devAddr, true), startingValue);
     QCOMPARE(foundCycles, expCycles);
 }
 

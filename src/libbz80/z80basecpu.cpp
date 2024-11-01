@@ -129,6 +129,20 @@ uint8_t Z80BaseCpu::execute() {
             throw UnimplementedInstructionException("ALU instruction...");
         }
     }
+    case 3: {
+        switch(decodedInst.z) {
+        case 3: {
+            switch(decodedInst.y) {
+            case 2:
+                return this->out_n_a();
+            default:
+                throw UnimplementedInstructionException();
+            }
+        }
+        default:
+            throw UnimplementedInstructionException();
+        }
+    }
     default:
         throw UnimplementedInstructionException();
     }
