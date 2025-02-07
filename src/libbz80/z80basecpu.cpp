@@ -89,9 +89,8 @@ uint8_t Z80BaseCpu::execute() {
             switch(decodedInst.q) {
             case 0:
                 return this->ld_rr_imm();
-            default:
-                throw UnimplementedInstructionException(
-                    std::string("ADD HL, rp[p]"));
+            case 1:
+                return this->add_hl_rr();
             }
         }
         case 4: {

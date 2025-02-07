@@ -133,6 +133,11 @@ private slots:
 
     // IN A, (n)
     void test_in_a_n();
+
+    // ADD HL, rr
+    void test_add_hl_rr_data();
+    void test_add_hl_rr();
+    void test_add_hl_sp();
 };
 
 Bz80BaseCpuInstructionsTest::Bz80BaseCpuInstructionsTest() {
@@ -1590,6 +1595,107 @@ void Bz80BaseCpuInstructionsTest::test_in_a_n() {
 
     QCOMPARE(this->cpu->registerA, startingValue);
     QCOMPARE(foundCycles, expCycles);
+}
+
+void Bz80BaseCpuInstructionsTest::test_add_hl_rr_data() {
+    QTest::addColumn<uint8_t>("opcode");
+    QTest::addColumn<RegisterPairType*>("registerPair");
+    QTest::addColumn<uint16_t>("startingHLValue");
+    QTest::addColumn<uint16_t>("startingRPValue");
+    QTest::addColumn<FlagRegister>("startingFlags");
+    QTest::addColumn<FlagRegister>("expectedFlags");
+
+    FlagRegister startFlags = genRandomFlags();
+
+    QTest::addRow("ADD HL, BC")
+        << (uint8_t)0x09 << &this->cpu->registerBC << (uint16_t)0x8068
+        << (uint16_t)0x1ee3 << startFlags
+        << FlagRegister {
+            .carry = false,
+            .add_sub = false,
+            .overflow = startFlags.overflow,
+            .halfcarry = false,
+            .zero = startFlags.zero,
+            .sign = startFlags.sign
+        };
+
+    startFlags = genRandomFlags();
+    QTest::addRow("ADD HL, DE")
+        << (uint8_t)0x19 << &this->cpu->registerDE << (uint16_t)0x3578
+        << (uint16_t)0xb3f6 << startFlags
+        << FlagRegister {
+            .carry = false,
+            .add_sub = false,
+            .overflow = startFlags.overflow,
+            .halfcarry = false,
+            .zero = startFlags.zero,
+            .sign = startFlags.sign
+        };
+
+    startFlags = genRandomFlags();
+    QTest::addRow("ADD HL, HL")
+        << (uint8_t)0x29 << &this->cpu->registerHL << (uint16_t)0x9df9
+        << (uint16_t)0x9df9 << startFlags
+        << FlagRegister {
+            .carry = true,
+            .add_sub = false,
+            .overflow = startFlags.overflow,
+            .halfcarry = true,
+            .zero = startFlags.zero,
+            .sign = startFlags.sign
+        };
+}
+
+void Bz80BaseCpuInstructionsTest::test_add_hl_rr() {
+    QFETCH(uint8_t, opcode);
+    QFETCH(RegisterPairType*, registerPair);
+    QFETCH(uint16_t, startingHLValue);
+    QFETCH(uint16_t, startingRPValue);
+    QFETCH(FlagRegister, startingFlags);
+    QFETCH(FlagRegister, expectedFlags);
+
+    uint16_t expectedValue = startingHLValue + startingRPValue;
+
+    this->cpu->registerHL.set16(startingHLValue);
+    registerPair->set16(startingRPValue);
+    this->cpu->registerF = startingFlags;
+    this->cpu->currentOpcode = opcode;
+    this->cpu->state = Z80BaseCpu::CpuState::DECODE;
+    this->cpu->tick();
+    uint8_t cycles = this->cpu->tick();
+
+    QCOMPARE(this->cpu->registerHL.get16(), expectedValue);
+    QCOMPARE(this->cpu->registerF, expectedFlags);
+    QCOMPARE(cycles, 7);
+}
+
+void Bz80BaseCpuInstructionsTest::test_add_hl_sp() {
+    const uint8_t opcode = 0x39;
+    uint16_t startingHLValue = (uint16_t)0x285b;
+    uint16_t startingSPValue = (uint16_t)0xf376;
+    const FlagRegister startingFlags = genRandomFlags();
+    const FlagRegister expFlags = FlagRegister {
+        .carry = true,
+        .add_sub = false,
+        .overflow = startingFlags.overflow,
+        .halfcarry = false,
+        .zero = startingFlags.zero,
+        .sign = startingFlags.sign
+    };
+    const uint16_t expValue = startingHLValue + startingSPValue;
+    const uint8_t expCycles = 7;
+
+    this->cpu->registerHL = startingHLValue;
+    this->cpu->stackPointer = startingSPValue;
+    this->cpu->registerF = startingFlags;
+    this->cpu->currentOpcode = opcode;
+    this->cpu->state = Z80BaseCpu::CpuState::DECODE;
+    this->cpu->tick();
+    uint8_t cycles = this->cpu->tick();
+
+    QCOMPARE(this->cpu->registerHL.get16(), expValue);
+    QCOMPARE(this->cpu->registerF, expFlags);
+    QCOMPARE(cycles, expCycles);
 }
 
 QTEST_APPLESS_MAIN(Bz80BaseCpuInstructionsTest)

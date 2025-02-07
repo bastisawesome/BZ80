@@ -136,6 +136,7 @@ protected:
     uint8_t ex_af_afp();
     uint8_t out_n_a();
     uint8_t in_a_imm();
+    uint8_t add_hl_rr();
 };
 
 } // namespace bz80

@@ -13,6 +13,14 @@ bool calcFlagH(uint8_t origValue, uint8_t toAdd, bool isSub = false) {
     return ((int8_t)origValue - (int8_t)toAdd) < 0;
 }
 
+bool calcFlagH16(uint16_t origValue, uint16_t toAdd, bool isSub = false) {
+    if(!isSub) {
+        return ((origValue & 0xfff) + (toAdd & 0xfff)) > 0xfff;
+    }
+
+    return ((int16_t)origValue - (int16_t)toAdd) < 0;
+}
+
 uint8_t Z80BaseCpu::ld_r_imm() {
     uint8_t cycles = MEMORY_ACCESS_CYCLES;
     uint8_t value = this->bus.read8(this->programCounter++, false);
@@ -467,6 +475,38 @@ uint8_t Z80BaseCpu::in_a_imm() {
         this->bus.read8(this->programCounter++, false);
 
     this->registerA = this->bus.read8(addr, true);
+
+    return cycles;
+}
+
+uint8_t Z80BaseCpu::add_hl_rr() {
+    const uint8_t cycles = 7;
+    uint16_t value = 0;
+
+    switch(this->currentDecodedInstruction.p) {
+    case 0:
+        value = this->registerBC.get16();
+        break;
+    case 1:
+        value = this->registerDE.get16();
+        break;
+    case 2:
+        value = this->registerHL.get16();
+        break;
+    case 3:
+        value = this->stackPointer;
+        break;
+    default:
+        return 255;
+    }
+
+    int result = (int)this->registerHL.get16() + (int)value;
+
+    this->registerF.carry = result > 0xffff;
+    this->registerF.add_sub = false;
+    this->registerF.halfcarry = calcFlagH16(this->registerHL.get16(), value);
+
+    this->registerHL.set16((uint16_t)result);
 
     return cycles;
 }
