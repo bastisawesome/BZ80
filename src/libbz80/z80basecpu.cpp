@@ -93,6 +93,21 @@ uint8_t Z80BaseCpu::execute() {
                 return this->add_hl_rr();
             }
         }
+        case 2: {
+            switch(decodedInst.q) {
+            case 0:
+                switch(decodedInst.p) {
+                case 0: return this->ld_addr_bc_a();
+                case 1: return this->ld_addr_de_a();
+                case 2: return this->ld_addr_imm_hl();
+                case 3: return this->ld_addr_imm_a();
+                }
+
+                break;
+            default:
+                throw UnimplementedInstructionException();
+            }
+        }
         case 4: {
             cycles += this->inc_r();
             return cycles;

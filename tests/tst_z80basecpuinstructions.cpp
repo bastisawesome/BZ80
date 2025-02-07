@@ -138,6 +138,18 @@ private slots:
     void test_add_hl_rr_data();
     void test_add_hl_rr();
     void test_add_hl_sp();
+
+    // LD (BC), A
+    void test_ld_addr_bc_a();
+
+    // LD (DE), A
+    void test_ld_addr_de_a();
+
+    // LD (nn), HL
+    void test_ld_addr_imm_hl();
+
+    // LD (nn), A
+    void test_ld_addr_imm_a();
 };
 
 Bz80BaseCpuInstructionsTest::Bz80BaseCpuInstructionsTest() {
@@ -1695,6 +1707,94 @@ void Bz80BaseCpuInstructionsTest::test_add_hl_sp() {
 
     QCOMPARE(this->cpu->registerHL.get16(), expValue);
     QCOMPARE(this->cpu->registerF, expFlags);
+    QCOMPARE(cycles, expCycles);
+}
+
+void Bz80BaseCpuInstructionsTest::test_ld_addr_bc_a() {
+    const uint8_t opcode = (uint8_t)0x02;
+    const uint8_t startingAValue = (uint8_t)0xac;
+    const uint16_t address = (uint16_t)0x02;
+    const FlagRegister startingFlags = genRandomFlags();
+    const uint8_t expCycles = MEMORY_ACCESS_CYCLES;
+
+    this->cpu->registerA = startingAValue;
+    this->cpu->registerBC.set16(address);
+    this->cpu->registerF = startingFlags;
+
+    this->cpu->currentOpcode = opcode;
+    this->cpu->state = Z80BaseCpu::CpuState::DECODE;
+    this->cpu->tick();
+    uint8_t cycles = this->cpu->tick();
+
+    QCOMPARE(this->bus.read8(address, false), startingAValue);
+    QCOMPARE(this->cpu->registerF, startingFlags);
+    QCOMPARE(cycles, expCycles);
+}
+
+void Bz80BaseCpuInstructionsTest::test_ld_addr_de_a() {
+    const uint8_t opcode = (uint8_t)0x12;
+    const uint8_t startingAValue = (uint8_t)0x40;
+    const uint16_t address = (uint16_t)0x9;
+    const FlagRegister startingFlags = genRandomFlags();
+    const uint8_t expCycles = MEMORY_ACCESS_CYCLES;
+
+    this->cpu->registerA = startingAValue;
+    this->cpu->registerDE.set16(address);
+    this->cpu->registerF = startingFlags;
+
+    this->cpu->currentOpcode = opcode;
+    this->cpu->state = Z80BaseCpu::CpuState::DECODE;
+    this->cpu->tick();
+    uint8_t cycles = this->cpu->tick();
+
+    QCOMPARE(this->bus.read8(address, false), startingAValue);
+    QCOMPARE(this->cpu->registerF, startingFlags);
+    QCOMPARE(cycles, expCycles);
+}
+
+void Bz80BaseCpuInstructionsTest::test_ld_addr_imm_hl() {
+    const uint8_t opcode = (uint8_t)0x22;
+    const uint16_t startingHLValue = (uint16_t)0xb;
+    const uint16_t address = (uint16_t)0x8;
+    const FlagRegister startingFlags = genRandomFlags();
+    const uint8_t expCycles = MEMORY_ACCESS_CYCLES*4;
+
+    this->bus.write16(0x1, address);
+
+    this->cpu->registerHL = startingHLValue;
+    this->cpu->registerF = startingFlags;
+    this->cpu->programCounter = 1;
+
+    this->cpu->currentOpcode = opcode;
+    this->cpu->state = Z80BaseCpu::CpuState::DECODE;
+    this->cpu->tick();
+    uint8_t cycles = this->cpu->tick();
+
+    QCOMPARE(this->bus.read16(address), startingHLValue);
+    QCOMPARE(this->cpu->registerF, startingFlags);
+    QCOMPARE(cycles, expCycles);
+}
+
+void Bz80BaseCpuInstructionsTest::test_ld_addr_imm_a() {
+    const uint8_t opcode = (uint8_t)0x32;
+    const uint8_t startingAValue = (uint8_t)0x63;
+    const uint16_t address = (uint16_t)0x03;
+    const FlagRegister startingFlags = genRandomFlags();
+    const uint8_t expCycles = MEMORY_ACCESS_CYCLES*3;
+
+    this->bus.write16(0x1, address);
+
+    this->cpu->registerA = startingAValue;
+    this->cpu->registerF = startingFlags;
+    this->cpu->programCounter = 1;
+
+    this->cpu->currentOpcode = opcode;
+    this->cpu->state = Z80BaseCpu::CpuState::DECODE;
+    this->cpu->tick();
+    uint8_t cycles = this->cpu->tick();
+
+    QCOMPARE(this->bus.read8(address, false), startingAValue);
+    QCOMPARE(this->cpu->registerF, startingFlags);
     QCOMPARE(cycles, expCycles);
 }
 
