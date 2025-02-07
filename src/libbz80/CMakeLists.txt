@@ -1,3 +1,13 @@
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+include(GitVersion)
+
+get_version_from_git()
+
+configure_file(
+    ${CMAKE_SOURCE_DIR}/version.hpp.in
+    ${CMAKE_CURRENT_BINARY_DIR}/version.hpp
+)
+
 qt_add_library(libbz80 STATIC
     mmioDevice.hpp
     mmioRam.hpp

@@ -1,6 +1,18 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(BZ80 VERSION 0.0.1 LANGUAGES CXX)
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+include(GitVersion)
+
+get_version_from_git()
+
+configure_file(
+    ${CMAKE_SOURCE_DIR}/version.hpp.in
+    ${CMAKE_CURRENT_BINARY_DIR}/version.hpp
+)
+
+include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+
+project(BZ80 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
