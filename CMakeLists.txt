@@ -5,10 +5,15 @@ include(GitVersion)
 
 get_version_from_git()
 
+set(VERSION_HEADER_TEMPLATE "${CMAKE_SOURCE_DIR}/version.hpp.in")
+set(VERSION_HEADER_FILE "${CMAKE_CURRENT_BINARY_DIR}/version.hpp")
+
 configure_file(
-    ${CMAKE_SOURCE_DIR}/version.hpp.in
-    ${CMAKE_CURRENT_BINARY_DIR}/version.hpp
+    ${VERSION_HEADER_TEMPLATE}
+    ${VERSION_HEADER_FILE}
 )
+
+add_custom_target(version_update DEPENDS ${VERSION_HEADER_FILE})
 
 include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 
@@ -28,4 +33,6 @@ if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
     add_subdirectory(tests)
 endif()
 
- enable_testing(true)
+enable_testing(true)
+
+add_custom_target(${CMAKE_PROJECT_NAME} version_update)
