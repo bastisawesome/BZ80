@@ -13,8 +13,6 @@ configure_file(
     ${VERSION_HEADER_FILE}
 )
 
-add_custom_target(version_update DEPENDS ${VERSION_HEADER_FILE})
-
 include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 
 project(BZ80 LANGUAGES CXX)
@@ -34,5 +32,3 @@ if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
 endif()
 
 enable_testing(true)
-
-add_custom_target(${CMAKE_PROJECT_NAME} version_update)

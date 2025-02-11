@@ -5,8 +5,6 @@ function(get_version_from_git)
         return()
     endif()
 
-    set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/.git/HEAD")
-
     execute_process(
         COMMAND ${GIT_EXECUTABLE} describe --tags --dirty --match "v*" --always
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
@@ -45,15 +43,15 @@ function(get_version_from_git)
         set(DIRTY "-${GIT_COMMIT_SHORT_HASH}")
     endif()
 
-    set(PROJECT_VERSION_MAJOR ${MAJOR})
+    set(PROJECT_VERSION_MAJOR ${MAJOR} FORCE)
     set(PROJECT_VERSION_MAJOR ${MAJOR} PARENT_SCOPE)
-    set(PROJECT_VERSION_MINOR ${MINOR})
+    set(PROJECT_VERSION_MINOR ${MINOR} FORCE)
     set(PROJECT_VERSION_MINOR ${MINOR} PARENT_SCOPE)
-    set(PROJECT_VERSION_PATCH ${PATCH})
+    set(PROJECT_VERSION_PATCH ${PATCH} FORCE)
     set(PROJECT_VERSION_PATCH ${PATCH} PARENT_SCOPE)
 
-    set(FULL_VERSION "${MAJOR}.${MINOR}.${PATCH}${DIRTY}")
+    set(FULL_VERSION "${MAJOR}.${MINOR}.${PATCH}${DIRTY}" FORCE)
     set(FULL_VERSION "${MAJOR}.${MINOR}.${PATCH}${DIRTY}" PARENT_SCOPE)
-    set(PROJECT_VERSION "${MAJOR}.${MINOR}.${PATCH}")
+    set(PROJECT_VERSION "${MAJOR}.${MINOR}.${PATCH}" FORCE)
     set(PROJECT_VERSION "${MAJOR}.${MINOR}.${PATCH}" PARENT_SCOPE)
 endfunction()
