@@ -141,6 +141,10 @@ protected:
     uint8_t ld_addr_de_a();
     uint8_t ld_addr_imm_hl();
     uint8_t ld_addr_imm_a();
+    uint8_t ld_a_addr_bc();
+    uint8_t ld_a_addr_de();
+    uint8_t ld_a_addr_imm();
+    uint8_t ld_hl_addr_imm();
 };
 
 } // namespace bz80

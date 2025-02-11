@@ -552,4 +552,54 @@ uint8_t Z80BaseCpu::ld_addr_imm_a() {
 
     return cycles;
 }
+
+uint8_t Z80BaseCpu::ld_a_addr_bc() {
+    uint8_t cycles = 0;
+
+    uint8_t value = this->bus.read8(this->registerBC.get16(), false);
+    cycles += MEMORY_ACCESS_CYCLES;
+
+    this->registerA = value;
+
+    return cycles;
+}
+
+uint8_t Z80BaseCpu::ld_a_addr_de() {
+    uint8_t cycles = 0;
+
+    uint8_t value = this->bus.read8(this->registerDE.get16(), false);
+    cycles += MEMORY_ACCESS_CYCLES;
+
+    this->registerA = value;
+
+    return cycles;
+}
+
+uint8_t Z80BaseCpu::ld_a_addr_imm() {
+    uint8_t cycles = 0;
+
+    uint16_t address = this->bus.read16(this->programCounter++);
+    cycles += MEMORY_ACCESS_CYCLES * 2;
+
+    uint8_t value = this->bus.read8(address, false);
+    cycles += MEMORY_ACCESS_CYCLES;
+
+    this->registerA = value;
+
+    return cycles;
+}
+
+uint8_t Z80BaseCpu::ld_hl_addr_imm() {
+    uint8_t cycles = 0;
+
+    uint16_t address = this->bus.read16(this->programCounter++);
+    cycles += MEMORY_ACCESS_CYCLES*2;
+
+    uint16_t value = this->bus.read16(address);
+    cycles += MEMORY_ACCESS_CYCLES*2;
+
+    this->registerHL.set16(value);
+
+    return cycles;
+}
 };

@@ -104,8 +104,13 @@ uint8_t Z80BaseCpu::execute() {
                 }
 
                 break;
-            default:
-                throw UnimplementedInstructionException();
+            case 1:
+                switch(decodedInst.p) {
+                case 0: return this->ld_a_addr_bc();
+                case 1: return this->ld_a_addr_de();
+                case 2: return this->ld_hl_addr_imm();
+                case 3: return this->ld_a_addr_imm();
+                }
             }
         }
         case 4: {
