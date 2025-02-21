@@ -602,4 +602,48 @@ uint8_t Z80BaseCpu::ld_hl_addr_imm() {
 
     return cycles;
 }
+
+uint8_t Z80BaseCpu::inc_rr() {
+    const uint8_t cycles = 6;
+
+    switch(this->currentDecodedInstruction.p) {
+    case 0:
+        this->registerBC.add16(1);
+        break;
+    case 1:
+        this->registerDE.add16(1);
+        break;
+    case 2:
+        this->registerHL.add16(1);
+        break;
+    case 3:
+        this->stackPointer += 1;
+        break;
+    default: return 255;
+    }
+
+    return cycles;
+}
+
+uint8_t Z80BaseCpu::dec_rr() {
+    const uint8_t cycles = 6;
+
+    switch(this->currentDecodedInstruction.p) {
+    case 0:
+        this->registerBC.add16(-1);
+        break;
+    case 1:
+        this->registerDE.add16(-1);
+        break;
+    case 2:
+        this->registerHL.add16(-1);
+        break;
+    case 3:
+        this->stackPointer -= 1;
+        break;
+    default: return 255;
+    }
+
+    return cycles;
+}
 };

@@ -113,6 +113,12 @@ uint8_t Z80BaseCpu::execute() {
                 }
             }
         }
+        case 3: {
+            switch(decodedInst.q) {
+            case 0: return inc_rr();
+            case 1: return dec_rr();
+            }
+        }
         case 4: {
             cycles += this->inc_r();
             return cycles;
